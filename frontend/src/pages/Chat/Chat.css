@@ -1,0 +1,89 @@
+/* Chat.css */
+
+/* Global styles */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f0f2f5;
+  margin: 0;
+  padding: 0;
+}
+
+.container-fluid {
+  padding: 20px;
+}
+
+/* Navbar styles */
+.navbar {
+  background-color: #008080; /* Dark cyan */
+  padding: 10px;
+  color: #fff; /* White text color */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar button {
+  background-color: transparent;
+  border: none;
+  color: #fff; /* White text color */
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* Chat sidebar styles */
+.chat-sidebar {
+  background-color: #fff; /* White background color */
+  width: 100%;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Soft shadow */
+}
+
+.c-h2 {
+  font-size: 24px; /* Header font size */
+  margin-bottom: 20px; /* Bottom margin */
+  color: #333; /* Dark text color */
+}
+
+/* Chat list styles */
+.Chat-list {
+  list-style-type: none; /* Remove bullet points */
+  padding: 0;
+}
+
+.chat-item {
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  background-color: #f0f8ff; /* Alice blue */
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); /* Soft shadow */
+  transition: background-color 0.3s ease;
+}
+
+.chat-item:hover {
+  background-color: #e0f0ff; /* Lighter background color on hover */
+}
+
+/* Chat content styles */
+.chat-content {
+  background-color: #fff; /* White background color */
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Soft shadow */
+}
+
+.username {
+  font-weight: bold;
+}
+.chat-l {
+  margin-left: -50px;
+  width: 250px;
+}
+.online-dot {
+  width: 10px;
+  height: 10px;
+  background-color: #4caf50; /* Green */
+  border-radius: 50%;
+  
+}

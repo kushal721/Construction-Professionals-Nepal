@@ -1,0 +1,7 @@
+.user-info {
+  display: flex;
+  flex-direction: row;
+  margin-left: 10px;
+  font-size: 20px;
+  align-items: center;
+}

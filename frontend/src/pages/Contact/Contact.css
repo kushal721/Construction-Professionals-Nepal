@@ -1,0 +1,44 @@
+.contact-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  height: 100vh;
+  background-color: rgb(243, 242, 242);
+}
+
+.contact-form {
+  width: 45%;
+  height: 60vh;
+
+  margin-left: 50px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  border-radius: 8px;
+}
+
+.contact-image {
+  width: 40%;
+  margin-right: 80px;
+  height: 90vh;
+
+  /* background-image: url("/r1.png"); Correct path from the root */
+  background-size: cover;
+  background-position: center;
+}
+.heading-2 {
+  color: #333;
+  text-align: center;
+  font-size: 30px;
+}
+
+.TextField {
+  margin-bottom: 20px;
+}
+
+.Button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-top: 20px;
+}

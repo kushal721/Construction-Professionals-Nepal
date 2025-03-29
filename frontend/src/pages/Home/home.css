@@ -1,0 +1,82 @@
+.services-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  align-items: center;
+  padding: 50px 20px;
+  background-color: #f4f4f4;
+}
+
+.service {
+  flex: 1 1 300px; /* Ensures that each service box has a minimum width of 300px before wrapping */
+  margin: 20px;
+  padding: 20px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgb(122, 202, 243) 100%
+  );
+  border-radius: 15px;
+  text-align: center;
+  transition: transform 0.3s;
+}
+
+.service:hover {
+  transform: translateY(-10px);
+}
+
+.service h3 {
+  color: #9a0b0b;
+  font-size: 25px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.service p {
+  color: #666;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+.service-button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.service-button:hover {
+  background-color: #0056b3;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .services-container {
+    flex-direction: column; /* Stack the service divs vertically */
+    align-items: center; /* Center align the services for a clean vertical layout */
+  }
+
+  .service {
+    width: 80%; /* Make service blocks take up more width */
+    margin-bottom: 20px; /* Add more space between the services */
+  }
+
+  .service-button {
+    width: 100%; /* Full width buttons on smaller screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .service h3 {
+    font-size: 20px; /* Adjust font size for smaller screens */
+  }
+
+  .service p {
+    font-size: 14px; /* Smaller text in the descriptions */
+  }
+}

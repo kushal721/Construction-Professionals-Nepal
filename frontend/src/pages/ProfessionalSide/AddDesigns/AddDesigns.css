@@ -1,0 +1,168 @@
+.adddesign-container {
+  display: flex;
+  padding: 2%;
+  gap: 3%;
+  width: 70%;
+}
+
+.content {
+  flex-grow: 1;
+  padding: 20px;
+  margin-right: 3%;
+}
+
+.page-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.add-design-form {
+  position: relative;
+  margin-top: 50px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.left-column,
+.right-column {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.left-column {
+  width: 48%;
+  margin-right: 2%;
+}
+
+.right-column {
+  width: 48%;
+}
+
+.form-group input[type="text"],
+.form-group input[type="file"],
+.form-group textarea {
+  width: calc(100% - 20px);
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.design-details-title,
+.upload-img-title {
+  font-size: 120%;
+  margin-bottom: 15px;
+  font-weight: bold;
+}
+
+.form-group textarea {
+  resize: vertical;
+}
+
+.btn-upload {
+  position: absolute;
+  margin-right: 0px;
+}
+
+.upload-button {
+  padding: 10px 20px;
+  margin-top: 15px;
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.remove-button {
+  color: #ffffff;
+  background-color: rgb(30, 66, 118);
+  border: none;
+  padding: 8px 12px;
+  margin-left: 10px;
+
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.selected-file span {
+  margin-right: 8px;
+}
+
+/*  */
+
+.review-section h3 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: #191919;
+}
+
+.cmt-main {
+  margin-bottom: 1rem;
+}
+
+.cmt-form {
+  display: flex;
+}
+
+.cmt-form input[type="text"] {
+  width: 80%;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+}
+
+.btn-addCmt button {
+  background-color: #7dcaf4;
+  color: white;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-addCmt button:hover {
+  background-color: #45a049;
+}
+
+.review {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border-left: 6px solid #3cb371;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.review-header h4 {
+  margin: 0;
+  color: #191919;
+}
+.review-content {
+  margin-top: -1rem;
+}
+
+.delete-comment-btn {
+  background-color: transparent;
+  color: #ff0000;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  left: 80%;
+}
+
+.delete-comment-btn:hover {
+  color: #f44336;
+}

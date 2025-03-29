@@ -1,0 +1,62 @@
+.addAppointment-container {
+  display: flex;
+  padding: 2%;
+  gap: 3%;
+  width: 60%;
+}
+
+.content {
+  flex-grow: 1;
+  padding: 20px;
+  margin-right: 3%;
+}
+
+.page-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.add-appointment-form {
+  margin-top: 50px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group input[type="time"] {
+  width: calc(100% - 20px);
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.appointment-details-title {
+  font-size: 120%;
+  margin-bottom: 15px;
+  font-weight: bold;
+}
+
+.btn-create {
+  position: absolute;
+  margin-right: 0px;
+}
+
+.create-button {
+  padding: 10px 20px;
+  margin-top: 15px;
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}

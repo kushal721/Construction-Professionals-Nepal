@@ -1,0 +1,113 @@
+.card {
+  /* border-radius: 12px; */
+  overflow: hidden;
+  /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); */
+  /* min-width: 200px; */
+
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  padding: 20px;
+  text-align: start;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+/* .card-img {
+    width: 70%;
+    height: auto;
+    
+  } */
+
+/* .card-content {
+    padding: 1.5rem;
+  } */
+
+/* .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  } */
+
+/* .title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #333;
+  } */
+
+.rating {
+  font-size: 1rem;
+  color: #f6ad55;
+}
+
+/* .short-description {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: #666;
+  } */
+
+.designer {
+  font-style: italic;
+  margin-bottom: 0.5rem;
+  color: #999;
+}
+
+.fav-btn {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+
+  font-size: 1rem;
+  font-weight: bold;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.view-details-btn:hover {
+  background-color: #4299e1;
+}
+
+.profe-img-container {
+  width: 100%;
+
+  overflow: hidden;
+  border-radius: 10px 10px 0 0;
+}
+
+.profe-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-content {
+  padding: 20px;
+}
+
+.message-now {
+  margin-top: 10px;
+  font-size: 16px;
+  color: #4a5568;
+}
+
+.btn-book-appoint {
+  width: 100%;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #1f3649;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-book-appoint:hover {
+  background-color: #3182ce;
+}

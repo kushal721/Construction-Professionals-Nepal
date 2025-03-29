@@ -1,0 +1,103 @@
+/* Professionals.css */
+
+.container {
+  display: flex;
+  flex-direction: row;
+  padding: 20px 20px 20px 0px;
+
+  margin: 20px auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.left {
+  /* padding: 20px; */
+  border-radius: 10px;
+
+  margin: 20px;
+  margin-top: 1%px;
+  width: 25%;
+}
+
+.right {
+  flex: 2;
+  padding: 50px;
+}
+
+.filter-search {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.footer-comp {
+  margin-top: 20px;
+}
+
+.designs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 25px;
+  margin-right: 5%;
+}
+
+.design {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+}
+
+.design img {
+  width: 100%;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.design-name {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.designer-name {
+  font-size: 1rem;
+  color: #666;
+}
+
+.design-rating {
+  display: inline-block;
+  width: 100px;
+  height: 20px;
+  background-color: #ffc107;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+/* Professionals.css */
+
+.filter-search {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dropdown label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.dropdown select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  outline: none;
+}
+
+.dropdown select:focus {
+  border-color: #007bff;
+}

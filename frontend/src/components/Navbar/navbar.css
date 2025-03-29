@@ -1,0 +1,8 @@
+.profile-img {
+  width: 55px; /* Set a fixed width */
+  height: 55px; /* Set a fixed height to match the width */
+  object-fit: cover; /* Ensure the image covers the area without being stretched */
+  border-radius: 50%; /* Circular mask */
+  display: block; /* Removes any extra space below the image */
+  margin: 0 auto; /* Center align if needed */
+}

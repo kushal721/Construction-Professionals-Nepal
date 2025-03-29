@@ -1,0 +1,63 @@
+.favorite-container {
+  max-width: 800px;
+  margin: 2% auto;
+}
+
+.favorite-heading {
+    
+  text-align: start;
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.favorite-list {
+  list-style: none;
+  padding: 0;
+}
+
+.favorite-item {
+  display: flex;
+  align-items: center; /* Align items vertically */
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.profe-img-container {
+  max-width: 150px;
+
+  margin-right: 20px;
+}
+
+.profe-img-container img {
+  max-width: 150px; /* Adjust the maximum width of the image */
+  border-radius: 5px;
+}
+
+.desc {
+  flex-grow: 1; /* Occupy remaining space */
+}
+
+.design-name {
+  font-size: 1.2rem;
+  margin-bottom: 5px;
+}
+
+.design-detail {
+  margin: 5px 0;
+}
+
+.remove-btn {
+  background-color: #ff0000;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.remove-btn:hover {
+  background-color: #cc0000;
+}
