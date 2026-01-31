@@ -1,255 +1,185 @@
-// import React, { useState } from "react";
-// import emailjs from "@emailjs/browser";
-// import "./Contact.css";
-// import SuccessAlert from "./alert";
-// import { Button, TextField, Snackbar } from "@mui/material";
-
-// const Contact = () => {
-//   const [name, setName] = useState("");
-//   const [email, setEmail] = useState("");
-//   const [message, setMessage] = useState("");
-//   const [open, setOpen] = useState(false);
-//   const [errorMessage, setErrorMessage] = useState("");
-
-//   const handleSubmit = (e) => {
-//     e.preventDefault();
-
-//     // Check if any of the fields are empty
-//     if (!name || !email || !message) {
-//       setErrorMessage("Please fill in all fields");
-//       setOpen(true);
-//       return;
-//     }
-
-//     // Check if email is valid
-//     if (!validateEmail(email)) {
-//       setErrorMessage("Please enter a valid email address");
-//       setOpen(true);
-//       return;
-//     }
-
-//     // Your EmailJS service ID, template ID, and Public Key
-
-//     const serviceId = "service_h70ilos";
-//     const templateId = "template_gdhg6xi";
-//     const publicKey = "19IeVuY6xFyLVA11L";
-
-//     // Create a new object that contains dynamic template params
-//     const templateParams = {
-//       from_name: name,
-//       from_email: email,
-//       to_name: "Kushal",
-//       message: message,
-//     };
-
-//     // Send the email using EmailJS
-//     emailjs
-//       .send(serviceId, templateId, templateParams, publicKey)
-//       .then((response) => {
-//         console.log("Email sent successfully!", response);
-//         setName("");
-//         setEmail("");
-//         setMessage("");
-//         setOpen(true); // Show success alert
-//       })
-//       .catch((error) => {
-//         console.error("Error sending email:", error);
-//       });
-//   };
-
-//   const handleClose = () => {
-//     setOpen(false);
-//   };
-
-//   const isSubmitDisabled = !name || !email || !message;
-
-//   const validateEmail = (email) => {
-//     // Regular expression for email validation
-//     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-//     return regex.test(email);
-//   };
-
-//   return (
-//     <div className="email-form-container">
-//       <div className="form-container">
-//         <form onSubmit={handleSubmit} className="emailForm">
-//           <h2>Contact Us</h2>
-//           <br />
-//           <div className="input-container">
-//             <TextField
-//               type="text"
-//               placeholder="Your Name"
-//               value={name}
-//               onChange={(e) => setName(e.target.value)}
-//               className="input-field"
-//               fullWidth
-//             />
-//           </div>
-//           <div className="input-container">
-//             <TextField
-//               type="email"
-//               placeholder="Your Email"
-//               value={email}
-//               onChange={(e) => setEmail(e.target.value)}
-//               className="input-field"
-//               fullWidth
-//             />
-//           </div>
-//           <div className="input-container">
-//             <TextField
-//               multiline
-//               rows={4}
-//               placeholder="Your Message"
-//               value={message}
-//               onChange={(e) => setMessage(e.target.value)}
-//               className="input-field textarea-field"
-//               fullWidth
-//             />
-//           </div>
-//           <Button variant="contained" type="submit" disabled={isSubmitDisabled}>
-//             Send Email
-//           </Button>
-//         </form>
-//         <SuccessAlert open={open} onClose={handleClose} />{" "}
-//         {/* SuccessAlert component */}
-//         <Snackbar
-//           anchorOrigin={{ vertical: "top", horizontal: "center" }}
-//           open={open}
-//           autoHideDuration={6000}
-//           onClose={handleClose}
-//           message={errorMessage}
-//         />
-//       </div>
-//     </div>
-//   );
-// };
-// export default Contact;
 import React, { useState } from "react";
-import emailjs from "@emailjs/browser";
-import "./Contact.css"; // Make sure to update your CSS as per the new styles below
-import { Button, TextField, Snackbar } from "@mui/material";
-import SuccessAlert from "./alert";
+import { FiMail, FiPhone, FiMapPin, FiSend, FiFacebook, FiTwitter, FiInstagram, FiLinkedin } from "react-icons/fi";
 import FooterComp from "../../components/Footer/Footer";
+import { toast } from "react-toastify";
+import "./Contact.css";
 
 const Contact = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [open, setOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: ""
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
-    // Check if any of the fields are empty
-    if (!name || !email || !message) {
-      setErrorMessage("Please fill in all fields");
-      setOpen(true);
-      return;
-    }
-
-    // Check if email is valid
-    if (!validateEmail(email)) {
-      setErrorMessage("Please enter a valid email address");
-      setOpen(true);
-      return;
-    }
-
-    // Your EmailJS service ID, template ID, and Public Key
-    const serviceId = "service_h70ilos";
-    const templateId = "template_gdhg6xi";
-    const publicKey = "19IeVuY6xFyLVA11L";
-
-    // Create a new object that contains dynamic template params
-    const templateParams = {
-      from_name: name,
-      from_email: email,
-      to_name: "Kushal",
-      message: message,
-    };
-
-    // Send the email using EmailJS
-    emailjs
-      .send(serviceId, templateId, templateParams, publicKey)
-      .then((response) => {
-        console.log("Email sent successfully!", response);
-        setName("");
-        setEmail("");
-        setMessage("");
-        setOpen(true); // Show success alert
-      })
-      .catch((error) => {
-        console.error("Error sending email:", error);
-      });
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  const isSubmitDisabled = !name || !email || !message;
-
-  const validateEmail = (email) => {
-    // Regular expression for email validation
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
+    // Simulate form submission
+    setTimeout(() => {
+      toast.success("Message sent successfully! We'll get back to you soon.");
+      setFormData({ name: "", email: "", subject: "", message: "" });
+      setIsSubmitting(false);
+    }, 1000);
   };
 
   return (
-    <>
-      <div className="contact-container">
-        <div className="contact-form">
-          <h2 className="heading-2">Contact Us</h2>
-          <TextField
-            label="Name"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <TextField
-            label="Email"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <TextField
-            label="Message"
-            variant="outlined"
-            fullWidth
-            multiline
-            rows={4}
-            margin="normal"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            disabled={isSubmitDisabled}
-            onClick={handleSubmit}
-          >
-            Send Message
-          </Button>
+    <div className="contact-page">
+      {/* Hero Section */}
+      <section className="contact-hero">
+        <div className="contact-hero-content">
+          <h1 className="contact-hero-title">Get in Touch</h1>
+          <p className="contact-hero-subtitle">
+            Have questions? We'd love to hear from you. Send us a message
+            and we'll respond as soon as possible.
+          </p>
         </div>
-        <div className="contact-image">
-          <img src="/images/contact.webp" alt="" />
+      </section>
+
+      {/* Main Content */}
+      <section className="contact-main">
+        <div className="contact-container">
+          <div className="contact-grid">
+            {/* Contact Info */}
+            <div className="contact-info">
+              <h2 className="contact-info-title">Contact Information</h2>
+              <p className="contact-info-text">
+                Fill up the form and our team will get back to you within 24 hours.
+              </p>
+
+              <div className="contact-items">
+                <div className="contact-item">
+                  <div className="contact-item-icon">
+                    <FiPhone />
+                  </div>
+                  <div className="contact-item-content">
+                    <span className="contact-item-label">Phone</span>
+                    <span className="contact-item-value">+977-1-4XXXXXX</span>
+                  </div>
+                </div>
+
+                <div className="contact-item">
+                  <div className="contact-item-icon">
+                    <FiMail />
+                  </div>
+                  <div className="contact-item-content">
+                    <span className="contact-item-label">Email</span>
+                    <span className="contact-item-value">info@constructionpro.np</span>
+                  </div>
+                </div>
+
+                <div className="contact-item">
+                  <div className="contact-item-icon">
+                    <FiMapPin />
+                  </div>
+                  <div className="contact-item-content">
+                    <span className="contact-item-label">Address</span>
+                    <span className="contact-item-value">Kathmandu, Nepal</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="contact-social">
+                <span className="social-label">Follow Us</span>
+                <div className="social-links">
+                  <a href="#" className="social-link"><FiFacebook /></a>
+                  <a href="#" className="social-link"><FiTwitter /></a>
+                  <a href="#" className="social-link"><FiInstagram /></a>
+                  <a href="#" className="social-link"><FiLinkedin /></a>
+                </div>
+              </div>
+            </div>
+
+            {/* Contact Form */}
+            <div className="contact-form-wrapper">
+              <form onSubmit={handleSubmit} className="contact-form">
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="name">Your Name</label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="John Doe"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="email">Email Address</label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="john@example.com"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="subject">Subject</label>
+                  <input
+                    type="text"
+                    id="subject"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    placeholder="How can we help?"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="message">Message</label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    placeholder="Tell us more about your project..."
+                    rows="5"
+                    required
+                  ></textarea>
+                </div>
+
+                <button
+                  type="submit"
+                  className="submit-btn"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className="spinner-small"></span>
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <FiSend />
+                      Send Message
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
-        <SuccessAlert open={open} onClose={handleClose} />{" "}
-        {/* SuccessAlert component */}
-        <Snackbar
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
-          open={open}
-          autoHideDuration={6000}
-          onClose={handleClose}
-          message={errorMessage}
-        />
-      </div>
+      </section>
+
       <FooterComp />
-    </>
+    </div>
   );
 };
 

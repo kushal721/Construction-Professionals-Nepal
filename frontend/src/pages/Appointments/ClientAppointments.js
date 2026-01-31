@@ -1,265 +1,63 @@
-// import React, { useState, useEffect } from "react";
-// import "./ClientAppointments.css";
-// import { useAuthContext } from "../../hooks/useAuthContext";
-// import NavbarComp from "../../components/Navbar/Navbar";
-// import { toast, ToastContainer } from "react-toastify"; // Import toast for notifications
-
-// const ClientAppointments = () => {
-//   const [confirmedAppointments, setConfirmedAppointments] = useState([]);
-//   const [pendingAppointments, setPendingAppointments] = useState([]);
-//   const [cancelledAppointments, setCancelledAppointments] = useState([]);
-
-//   const { user } = useAuthContext();
-//   console.log(confirmedAppointments, "confirmedAppointments");
-//   console.log(pendingAppointments, "pendingAppointments");
-//   console.log(cancelledAppointments, "cancelledAppointments");
-
-//   useEffect(() => {
-//     const fetchClientAppointments = async () => {
-//       try {
-//         // Check if the user object or its token property is null
-//         if (!user || !user?.token) {
-//           console.error("User object or token is null.");
-//           // You can display an error message or redirect the user to the login page
-//           return;
-//         }
-
-//         const response = await fetch(
-//           `http://localhost:4000/api/appointments/client-appointments`,
-//           {
-//             headers: {
-//               Authorization: `Bearer ${user?.token}`,
-//             },
-//           }
-//         );
-//         if (response.ok) {
-//           const data = await response.json();
-//           if (Array.isArray(data.appointments)) {
-//             // Filter appointments based on status
-//             const confirmed = data.appointments.filter(
-//               (appointment) => appointment.appointment?.status === "confirmed"
-//             );
-//             const pending = data.appointments.filter(
-//               (appointment) => appointment.appointment?.status === "pending"
-//             );
-//             const cancelled = data.appointments.filter(
-//               (appointment) => appointment.appointment?.status === "cancelled"
-//             );
-//             setConfirmedAppointments(confirmed);
-//             setPendingAppointments(pending);
-//             setCancelledAppointments(cancelled);
-//           } else {
-//             console.error("Appointments data is not an array:", data);
-//           }
-//         } else {
-//           console.error("Failed to fetch client appointments");
-//         }
-//       } catch (error) {
-//         console.error("Error fetching client appointments:", error);
-//       }
-//     };
-
-//     if (user?.token) {
-//       fetchClientAppointments();
-//     }
-//   }, [user]);
-
-//   const handleDeleteAppointment = async (appointmentId) => {
-//     try {
-//       const response = await fetch(
-//         `http://localhost:4000/api/appointments/deleteCancelledAppointments/${appointmentId}`,
-//         {
-//           method: "DELETE",
-//           headers: {
-//             Authorization: `Bearer ${user.token}`,
-//           },
-//         }
-//       );
-
-//       // if (response.ok) {
-//       //   setCancelledAppointments((currentAppointments) =>
-//       //     currentAppointments.filter(
-//       //       (appointment) => appointment?._id !== appointmentId
-//       //     )
-//       //   );
-//       //   toast.success("Appointment deleted successfully!");
-//       // } else {
-//       //   toast.error("Failed to delete the appointment.");
-//       // }
-//       if (response.ok) {
-//         setCancelledAppointments((currentAppointments) =>
-//           currentAppointments.filter(
-//             (appointment) => appointment?._id !== appointmentId
-//           )
-//         );
-//         console.log("Updated cancelledAppointments state");
-//         toast.success("Appointment deleted successfully!");
-//       }
-//     } catch (error) {
-//       toast.error(`Error deleting appointment: ${error.message}`);
-//     }
-//   };
-
-//   return (
-//     <div className="client-appointments-container">
-//       <ToastContainer
-//         autoClose={5000}
-//         hideProgressBar={false}
-//         newestOnTop={false}
-//         closeOnClick
-//         rtl={false}
-//         pauseOnFocusLoss
-//         draggable
-//         pauseOnHover
-//       />
-//       <div className="appointment-section">
-//         <h1 className="page-title">Your Confirmed Appointments</h1>
-//         <AppointmentTable appointments={confirmedAppointments} />
-//       </div>
-//       <br />
-//       <br />
-//       <br />
-//       <div className="appointment-section">
-//         <h1 className="page-title">Pending Appointments</h1>
-//         <AppointmentTable appointments={pendingAppointments} />
-//       </div>
-//       <div className="appointment-section">
-//         <h1 className="page-title">Cancelled Appointments</h1>
-//         <AppointmentTable
-//           appointments={cancelledAppointments}
-//           showDelete={true}
-//           onDelete={handleDeleteAppointment}
-//         />
-//       </div>
-//     </div>
-//   );
-// };
-
-// const AppointmentTable = ({ appointments, showDelete, onDelete }) => (
-//   <table className="appointment-table">
-//     <thead>
-//       <tr>
-//         <th className="table-heading">Professional Name</th>
-//         <th className="table-heading">Email</th>
-//         <th className="table-heading">Contact Number</th>
-//         <th className="table-heading">Date</th>
-//         <th className="table-heading">Time</th>
-//         <th className="table-heading">Location</th>
-//         <th className="table-heading">Remark</th>
-//         {showDelete && <th className="table-heading">Action</th>}
-//       </tr>
-//     </thead>
-//     <tbody>
-//       {appointments.length > 0 ? (
-//         appointments.map((appointment) => (
-//           <tr key={appointment._id}>
-//             <td>{appointment.professionalDetails?.username}</td>
-//             <td>{appointment.professionalDetails?.email}</td>
-//             <td>{appointment.professionalDetails?.contactNumber}</td>
-//             <td className="table-data">
-//               {
-//                 new Date(appointment.appointmentDetails?.date)
-//                   .toISOString()
-//                   .split("T")[0]
-//               }
-//             </td>
-//             <td className="table-data">
-//               {appointment.appointment?.appointmentTime}
-//             </td>
-//             <td className="table-data">
-//               {appointment.appointmentDetails?.location}
-//             </td>
-//             <td className="table-data">{appointment.appointment?.remark}</td>
-//             {showDelete && (
-//               <td>
-//                 <button
-//                   onClick={() => onDelete(appointment.appointment?._id)}
-//                   className="delete-btn"
-//                 >
-//                   Delete
-//                 </button>
-//               </td>
-//             )}
-//           </tr>
-//         ))
-//       ) : (
-//         <tr>
-//           <td colSpan={showDelete ? 8 : 7}>No appointments found.</td>
-//         </tr>
-//       )}
-//     </tbody>
-//   </table>
-// );
-
-// export default ClientAppointments;
-
 import React, { useState, useEffect } from "react";
-import "./ClientAppointments.css";
-import { useAuthContext } from "../../hooks/useAuthContext";
-import NavbarComp from "../../components/Navbar/Navbar";
+import { FiCheckCircle, FiClock, FiXCircle, FiTrash2, FiMapPin, FiCalendar, FiUser, FiMessageSquare } from "react-icons/fi";
 import { toast, ToastContainer } from "react-toastify";
+import DashboardLayout from "../../components/DashboardLayout/DashboardLayout";
+import { useAuthContext } from "../../hooks/useAuthContext";
+import "./ClientAppointments.css";
 import "react-toastify/dist/ReactToastify.css";
 
 const ClientAppointments = () => {
   const [confirmedAppointments, setConfirmedAppointments] = useState([]);
   const [pendingAppointments, setPendingAppointments] = useState([]);
   const [cancelledAppointments, setCancelledAppointments] = useState([]);
-  const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
+  const [activeTab, setActiveTab] = useState("confirmed");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const { user } = useAuthContext();
 
   useEffect(() => {
     const fetchClientAppointments = async () => {
-      if (!user || !user?.token) {
-        console.error("User object or token is null.");
-        return;
-      }
+      if (!user || !user?.token) return;
 
-      const response = await fetch(
-        `http://localhost:4000/api/appointments/client-appointments`,
-        {
-          headers: {
-            Authorization: `Bearer ${user?.token}`,
-          },
+      try {
+        const response = await fetch(
+          `http://localhost:4000/api/appointments/client-appointments`,
+          {
+            headers: {
+              Authorization: `Bearer ${user?.token}`,
+            },
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setConfirmedAppointments(
+            data.appointments.filter((app) => app.appointment.status === "confirmed")
+          );
+          setPendingAppointments(
+            data.appointments.filter((app) => app.appointment.status === "pending" || app.appointment.status === "Waiting")
+          );
+          setCancelledAppointments(
+            data.appointments.filter((app) => app.appointment.status === "cancelled")
+          );
         }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setConfirmedAppointments(
-          data.appointments.filter(
-            (appointment) => appointment.appointment.status === "confirmed"
-          )
-        );
-        setPendingAppointments(
-          data.appointments.filter(
-            (appointment) => appointment.appointment.status === "pending"
-          )
-        );
-        setCancelledAppointments(
-          data.appointments.filter(
-            (appointment) => appointment.appointment.status === "cancelled"
-          )
-        );
-      } else {
-        console.error("Failed to fetch client appointments");
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching appointments:", error);
+        setLoading(false);
       }
     };
 
-    if (user?.token) {
-      fetchClientAppointments();
-    }
-    // fetchClientAppointments();
+    fetchClientAppointments();
   }, [user]);
 
-  const handleDeleteClick = (appointmentId) => {
-    setAppointmentToDelete(appointmentId);
-    setShowConfirmationPopup(true);
+  const handleDeleteClick = (id) => {
+    setAppointmentToDelete(id);
+    setShowDeleteModal(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (!appointmentToDelete) return;
-
     try {
       const response = await fetch(
         `http://localhost:4000/api/appointments/deleteCancelledAppointments/${appointmentToDelete}`,
@@ -272,121 +70,154 @@ const ClientAppointments = () => {
       );
 
       if (response.ok) {
-        setCancelledAppointments((currentAppointments) =>
-          currentAppointments.filter(
-            (appointment) => appointment._id !== appointmentToDelete
-          )
+        setCancelledAppointments((prev) =>
+          prev.filter((app) => app.appointmentDetails?._id !== appointmentToDelete && app.appointment?._id !== appointmentToDelete)
+          // Note: API might be returning different ID structure, kept broad for safety
         );
+        // Refresh list to be safe or rely on filter. The API seems to delete physically.
+        // Re-fetch might be safer but for now filter.
+        setCancelledAppointments(prev => prev.filter(app => app.appointment._id !== appointmentToDelete));
         toast.success("Appointment deleted successfully!");
       } else {
-        toast.error("Failed to delete the appointment.");
+        toast.error("Failed to delete appointment.");
       }
     } catch (error) {
-      toast.error(`Error deleting appointment: ${error.message}`);
+      toast.error(`Error: ${error.message}`);
+    }
+    setShowDeleteModal(false);
+  };
+
+  const renderAppointmentList = (appointments, type) => {
+    if (appointments.length === 0) {
+      return (
+        <div className="empty-state">
+          <div className="empty-icon">
+            {type === 'confirmed' ? <FiCalendar /> : type === 'pending' ? <FiClock /> : <FiXCircle />}
+          </div>
+          <h3>No {type} appointments</h3>
+          <p>You don't have any appointments in this category.</p>
+        </div>
+      );
     }
 
-    setShowConfirmationPopup(false);
-    setAppointmentToDelete(null);
+    return (
+      <div className="appointments-grid">
+        {appointments.map((item) => (
+          <div key={item.appointment._id} className="appointment-card">
+            <div className={`status-strip ${type}`}></div>
+            <div className="card-header">
+              <div className="prof-info">
+                <div className="prof-avatar">
+                  <FiUser />
+                </div>
+                <div>
+                  <h4>{item.professionalDetails?.username || "Professional"}</h4>
+                  <span className="prof-email">{item.professionalDetails?.email}</span>
+                </div>
+              </div>
+              {type === 'cancelled' && (
+                <button
+                  className="delete-icon-btn"
+                  onClick={() => handleDeleteClick(item.appointment._id)}
+                  title="Remove"
+                >
+                  <FiTrash2 />
+                </button>
+              )}
+            </div>
+
+            <div className="card-body">
+              <div className="info-row">
+                <FiCalendar className="info-icon" />
+                <span>
+                  {new Date(item.appointmentDetails?.date).toLocaleDateString()}
+                </span>
+              </div>
+              <div className="info-row">
+                <FiClock className="info-icon" />
+                <span>{item.appointment?.appointmentTime}</span>
+              </div>
+              <div className="info-row">
+                <FiMapPin className="info-icon" />
+                <span>{item.appointmentDetails?.location}</span>
+              </div>
+              {item.appointment?.remark && (
+                <div className="remark-box">
+                  <FiMessageSquare className="remark-icon" />
+                  <p>"{item.appointment.remark}"</p>
+                </div>
+              )}
+            </div>
+
+            <div className="card-footer">
+              <span className={`status-badge ${type}`}>
+                {item.appointment.status}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
-  const handleCancelDelete = () => {
-    setShowConfirmationPopup(false);
-    setAppointmentToDelete(null);
-  };
+  if (loading) {
+    return (
+      <DashboardLayout title="My Appointments" subtitle="Manage your bookings">
+        <div className="loading-state">
+          <div className="spinner"></div>
+        </div>
+      </DashboardLayout>
+    )
+  }
 
   return (
-    <div className="client-appointments-container">
+    <DashboardLayout title="My Appointments" subtitle="Track and manage your bookings with professionals">
       <ToastContainer />
-      <div className="appointment-section">
-        <h1 className="page-title">Your Confirmed Appointments</h1>
-        <AppointmentTable appointments={confirmedAppointments} />
-        <br />
-        <br />
-        <br />
-        <h1 className="page-title">Pending Appointments</h1>
-        <AppointmentTable appointments={pendingAppointments} />
-        <br />
-        <br />
-        <br />
-        <h1 className="page-title">Cancelled Appointments</h1>
-        <AppointmentTable
-          appointments={cancelledAppointments}
-          showDelete={true}
-          onDelete={handleDeleteClick}
-        />
+
+      <div className="tabs-header">
+        <button
+          className={`tab-btn ${activeTab === 'confirmed' ? 'active' : ''}`}
+          onClick={() => setActiveTab('confirmed')}
+        >
+          <FiCheckCircle /> Confirmed
+          <span className="badge">{confirmedAppointments.length}</span>
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
+          onClick={() => setActiveTab('pending')}
+        >
+          <FiClock /> Pending
+          <span className="badge warning">{pendingAppointments.length}</span>
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'cancelled' ? 'active' : ''}`}
+          onClick={() => setActiveTab('cancelled')}
+        >
+          <FiXCircle /> Cancelled
+          <span className="badge danger">{cancelledAppointments.length}</span>
+        </button>
       </div>
 
-      {showConfirmationPopup && (
-        <div className="confirmation-popup">
-          <h3>Are you sure you want to delete?</h3>
-          <div className="popup-buttons">
-            <button className="popup-button" onClick={handleConfirmDelete}>
-              Yes
-            </button>
-            <button className="popup-button" onClick={handleCancelDelete}>
-              No
-            </button>
+      <div className="tab-content">
+        {activeTab === 'confirmed' && renderAppointmentList(confirmedAppointments, 'confirmed')}
+        {activeTab === 'pending' && renderAppointmentList(pendingAppointments, 'pending')}
+        {activeTab === 'cancelled' && renderAppointmentList(cancelledAppointments, 'cancelled')}
+      </div>
+
+      {showDeleteModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Delete Appointment?</h3>
+            <p>Are you sure you want to remove this cancelled appointment history?</p>
+            <div className="modal-actions">
+              <button className="btn-secondary" onClick={() => setShowDeleteModal(false)}>Cancel</button>
+              <button className="btn-danger" onClick={handleConfirmDelete}>Delete</button>
+            </div>
           </div>
         </div>
       )}
-    </div>
+    </DashboardLayout>
   );
 };
-
-const AppointmentTable = ({ appointments, showDelete, onDelete }) => (
-  <table className="appointment-table">
-    <thead>
-      <tr>
-        <th className="table-heading">Professional Name</th>
-        <th className="table-heading">Email</th>
-        <th className="table-heading">Contact Number</th>
-        <th className="table-heading">Date</th>
-        <th className="table-heading">Time</th>
-        <th className="table-heading">Location</th>
-        <th className="table-heading">Remark</th>
-        {showDelete && <th className="table-heading">Action</th>}
-      </tr>
-    </thead>
-    <tbody>
-      {appointments.length > 0 ? (
-        appointments.map((appointment) => (
-          <tr key={appointment._id}>
-            <td>{appointment.professionalDetails?.username}</td>
-            <td>{appointment.professionalDetails?.email}</td>
-            <td>{appointment.professionalDetails?.contactNumber}</td>
-            <td className="table-data">
-              {
-                new Date(appointment.appointmentDetails?.date)
-                  .toISOString()
-                  .split("T")[0]
-              }
-            </td>
-            <td className="table-data">
-              {appointment.appointment?.appointmentTime}
-            </td>
-            <td className="table-data">
-              {appointment.appointmentDetails?.location}
-            </td>
-            <td className="table-data">{appointment.appointment?.remark}</td>
-            {showDelete && (
-              <td>
-                <button
-                  onClick={() => onDelete(appointment.appointment._id)}
-                  className="delete-btn"
-                >
-                  Delete
-                </button>
-              </td>
-            )}
-          </tr>
-        ))
-      ) : (
-        <tr>
-          <td colSpan={showDelete ? 8 : 7}>No appointments found.</td>
-        </tr>
-      )}
-    </tbody>
-  </table>
-);
 
 export default ClientAppointments;

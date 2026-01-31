@@ -1,49 +1,42 @@
 import React, { useState, useEffect } from "react";
-import { DataGrid } from "@mui/x-data-grid";
-import styled from "styled-components";
-import { Modal } from "react-bootstrap";
-
-import { Button } from "flowbite-react";
+import { DataGrid, gridClasses } from "@mui/x-data-grid";
+import { FiTrash2, FiEdit2, FiSave, FiX, FiCheck } from "react-icons/fi";
 import { toast, ToastContainer } from "react-toastify";
+import DashboardLayout from "../../../components/DashboardLayout/DashboardLayout";
 import "react-toastify/dist/ReactToastify.css";
-import Sidebar from "../../../components/Sidebar/Sidebar";
 
 export default function UserList() {
   const [items, setItems] = useState([]);
   const [editingRow, setEditingRow] = useState(null);
-  const [updatedName, setUpdatedName] = useState("");
-  const [updatedEmail, setUpdatedEmail] = useState("");
-  const [updatedContact, setUpdatedContact] = useState("");
-  const [updatedLocation, setUpdatedLocation] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [nameError, setNameError] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [contactError, setContactError] = useState("");
-  const [locationError, setLocationError] = useState("");
-  const [nameTouched, setNameTouched] = useState(false);
-  const [emailTouched, setEmailTouched] = useState(false);
-  const [contactTouched, setContactTouched] = useState(false);
-  const [locationTouched, setLocationTouched] = useState(false);
-  const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
+  const [updatedData, setUpdatedData] = useState({
+    username: "",
+    email: "",
+    contactNumber: "",
+    location: "",
+  });
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteUserId, setDeleteUserId] = useState(null);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("http://localhost:4000/api/userr");
-        const data = await response.json();
-        setItems(data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
     fetchData();
   }, []);
 
-  const deleteUser = async (id) => {
+  const fetchData = async () => {
+    try {
+      const response = await fetch("http://localhost:4000/api/userr");
+      const data = await response.json();
+      setItems(data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Failed to fetch users");
+    }
+  };
+
+  const handleDeleteClick = (id) => {
     setDeleteUserId(id);
-    setShowConfirmationPopup(true);
+    setShowDeleteModal(true);
   };
 
   const handleConfirmDelete = async () => {
@@ -53,139 +46,63 @@ export default function UserList() {
       });
 
       setItems(items.filter((item) => item._id !== deleteUserId));
-      setShowConfirmationPopup(false);
-      toast.success("User deleted successfully!"); // Show success toast
+      setShowDeleteModal(false);
+      toast.success("User deleted successfully!");
     } catch (error) {
       console.error("Error deleting user:", error);
-      toast.error("Failed to delete user."); // Show error toast
+      toast.error("Failed to delete user.");
     }
   };
 
-  const updateUserDetails = async (id) => {
+  const handleEditClick = (row) => {
+    setEditingRow(row.id);
+    setUpdatedData({
+      username: row.userName,
+      email: row.userEmail,
+      contactNumber: row.userContact,
+      location: row.userLocation,
+    });
+    setErrors({});
+    setShowEditModal(true);
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!updatedData.username?.trim()) newErrors.username = "Name is required";
+    if (!updatedData.email?.trim()) newErrors.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updatedData.email)) {
+      newErrors.email = "Invalid email format";
+    }
+    if (!updatedData.contactNumber?.trim()) newErrors.contactNumber = "Contact is required";
+    if (!updatedData.location?.trim()) newErrors.location = "Location is required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleUpdate = async () => {
+    if (!validateForm()) return;
+
     try {
-      // Validation
-      if (!updatedName.trim()) {
-        setNameError("Name cannot be empty");
-        return;
-      } else {
-        setNameError("");
-      }
-      if (!updatedEmail.trim()) {
-        setEmailError("Email cannot be empty");
-        return;
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updatedEmail)) {
-        setEmailError("Please enter a valid email address");
-        return;
-      } else {
-        setEmailError("");
-      }
-      if (!updatedContact.trim()) {
-        setContactError("Contact cannot be empty");
-        return;
-      } else {
-        setContactError("");
-      }
-      if (!updatedLocation.trim()) {
-        setLocationError("Location cannot be empty");
-        return;
-      } else {
-        setLocationError("");
-      }
-
       const formData = new FormData();
-      formData.append("username", updatedName);
-      formData.append("email", updatedEmail);
-      formData.append("contactNumber", updatedContact);
-      formData.append("location", updatedLocation);
+      formData.append("username", updatedData.username);
+      formData.append("email", updatedData.email);
+      formData.append("contactNumber", updatedData.contactNumber);
+      formData.append("location", updatedData.location);
 
-      const response = await fetch(`http://localhost:4000/api/userr/${id}`, {
+      const response = await fetch(`http://localhost:4000/api/userr/${editingRow}`, {
         method: "PUT",
         body: formData,
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to update user");
-      }
+      if (!response.ok) throw new Error("Failed to update user");
 
-      setShowModal(false);
-      toast.success("User updated successfully!"); // Show success toast
-      // You may need to refresh the data after updating a user
+      setShowEditModal(false);
+      toast.success("User updated successfully!");
       fetchData();
     } catch (error) {
       console.error("Error updating user:", error);
-      toast.error("Failed to update user."); // Show error toast
-    }
-  };
-
-  const cancelEditing = () => {
-    setShowModal(false);
-    setEditingRow(null);
-    setUpdatedName("");
-    setUpdatedEmail("");
-    setUpdatedContact("");
-    setUpdatedLocation("");
-  };
-
-  const editUser = (id, username, email, contact, location) => {
-    setEditingRow(id);
-    setUpdatedName(username);
-    setUpdatedEmail(email);
-    setUpdatedContact(contact);
-    setUpdatedLocation(location);
-    setShowModal(true);
-  };
-
-  const handleCancelDelete = () => {
-    setShowConfirmationPopup(false);
-    setDeleteUserId(null);
-  };
-
-  const handleNameChange = (e) => {
-    const username = e.target.value;
-    setUpdatedName(username);
-    setNameTouched(true);
-    if (nameError && (username.trim() || nameTouched)) {
-      setNameError("");
-    }
-  };
-
-  const handleEmailChange = (e) => {
-    const email = e.target.value;
-    setUpdatedEmail(email);
-    setEmailTouched(true);
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email) && (emailError || emailTouched)) {
-      setEmailError("Please enter a valid email address");
-    } else {
-      setEmailError("");
-    }
-  };
-
-  const handleContactChange = (e) => {
-    const contact = e.target.value;
-    setUpdatedContact(contact);
-    setContactTouched(true);
-    if (contactError && (contact.trim() || contactTouched)) {
-      setContactError("");
-    }
-  };
-
-  const handleLocationChange = (e) => {
-    const location = e.target.value;
-    setUpdatedLocation(location);
-    setLocationTouched(true);
-    if (locationError && (location.trim() || locationTouched)) {
-      setLocationError("");
-    }
-  };
-
-  const fetchData = async () => {
-    try {
-      const response = await fetch("http://localhost:4000/api/userr");
-      const data = await response.json();
-      setItems(data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
+      toast.error("Failed to update user.");
     }
   };
 
@@ -196,177 +113,373 @@ export default function UserList() {
     userContact: item.contactNumber,
     userLocation: item.location,
     userRole: item.role,
-    userPassword: item.password,
-    userProfile: item.profile,
   }));
 
   const columns = [
-    { field: "id", headerName: "ID", width: 220 },
-    { field: "userName", headerName: "User name", width: 150 },
-    { field: "userEmail", headerName: "Email", width: 230 },
-    { field: "userContact", headerName: "Contact", width: 150 },
-    { field: "userLocation", headerName: "Location", width: 100 },
-    { field: "userRole", headerName: "Role", width: 130 },
-    { field: "userPassword", headerName: "Password", width: 150 },
+    { field: "userName", headerName: "Name", flex: 1, minWidth: 150 },
+    { field: "userEmail", headerName: "Email", flex: 1.2, minWidth: 200 },
+    { field: "userContact", headerName: "Contact", flex: 0.8, minWidth: 130 },
+    { field: "userLocation", headerName: "Location", flex: 0.8, minWidth: 130 },
+    {
+      field: "userRole",
+      headerName: "Role",
+      width: 120,
+      renderCell: (params) => (
+        <span className={`role-badge ${params.value}`}>
+          {params.value}
+        </span>
+      )
+    },
     {
       field: "actions",
       headerName: "Actions",
+      width: 120,
       sortable: false,
-      width: 170,
-      height: 190,
       renderCell: (params) => (
-        <Actions>
-          <Button
-            type="button"
-            color="failure"
-            onClick={() => deleteUser(params.row.id)}
+        <div className="action-buttons-row">
+          <button
+            className="icon-btn edit-btn"
+            onClick={() => handleEditClick(params.row)}
+            title="Edit"
           >
-            Delete
-          </Button>
-          <Button
-            type="button"
-            color="success"
-            onClick={() =>
-              editUser(
-                params.row.id,
-                params.row.userName,
-                params.row.userEmail,
-                params.row.userContact,
-                params.row.userLocation
-              )
-            }
+            <FiEdit2 />
+          </button>
+          <button
+            className="icon-btn delete-btn"
+            onClick={() => handleDeleteClick(params.row.id)}
+            title="Delete"
           >
-            Edit
-          </Button>
-        </Actions>
+            <FiTrash2 />
+          </button>
+        </div>
       ),
     },
   ];
 
   return (
-    <div className="maindiv">
-      <div className="sidebar">
-        <Sidebar />
+    <DashboardLayout title="User Management" subtitle="Manage all users, professionals, and admins">
+      <div className="user-list-container" style={{ height: 600, width: '100%' }}>
+        <DataGrid
+          rows={rows}
+          columns={columns}
+          pageSize={10}
+          rowsPerPageOptions={[10, 25, 50]}
+          checkboxSelection
+          disableSelectionOnClick
+          className="custom-data-grid"
+          sx={{
+            [`& .${gridClasses.root}`]: {
+              border: 'none',
+              backgroundColor: 'white',
+              borderRadius: '12px',
+            },
+            [`& .${gridClasses.columnHeaders}`]: {
+              backgroundColor: '#f8fafc',
+              color: '#64748b',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+            },
+            [`& .${gridClasses.cell}`]: {
+              borderBottom: '1px solid #f1f5f9',
+              color: '#334155',
+            },
+            [`& .${gridClasses.row}:hover`]: {
+              backgroundColor: '#f8fafc',
+            },
+          }}
+        />
       </div>
-      <div style={{ padding: "1%" }}>
-        <div style={{ height: "84vh", width: "75vw" }}>
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            pageSize={6}
-            checkboxSelection
-          />
-          <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-            <Modal.Header closeButton>
-              <Modal.Title>Edit User</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <form>
-                <div className="mb-3">
-                  <label htmlFor="username" className="form-label">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    className={`form-control ${nameError ? "is-invalid" : ""}`}
-                    id="username"
-                    value={updatedName}
-                    onChange={handleNameChange}
-                  />
-                  {nameError && (
-                    <div className="invalid-feedback">{nameError}</div>
-                  )}
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="email" className="form-label">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    className={`form-control ${emailError ? "is-invalid" : ""}`}
-                    id="email"
-                    value={updatedEmail}
-                    onChange={handleEmailChange}
-                  />
-                  {emailError && (
-                    <div className="invalid-feedback">{emailError}</div>
-                  )}
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="contact" className="form-label">
-                    Contact
-                  </label>
-                  <input
-                    type="text"
-                    className={`form-control ${
-                      contactError ? "is-invalid" : ""
-                    }`}
-                    id="contact"
-                    value={updatedContact}
-                    onChange={handleContactChange}
-                  />
-                  {contactError && (
-                    <div className="invalid-feedback">{contactError}</div>
-                  )}
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="location" className="form-label">
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    className={`form-control ${
-                      locationError ? "is-invalid" : ""
-                    }`}
-                    id="location"
-                    value={updatedLocation}
-                    onChange={handleLocationChange}
-                  />
-                  {locationError && (
-                    <div className="invalid-feedback">{locationError}</div>
-                  )}
-                </div>
-              </form>
-            </Modal.Body>
-            <Modal.Footer>
+
+      {/* Edit Modal */}
+      {showEditModal && (
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3>Edit User</h3>
               <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => updateUserDetails(editingRow)}
+                className="close-btn"
+                onClick={() => setShowEditModal(false)}
               >
-                Save Changes
+                <FiX />
               </button>
+            </div>
+
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Name</label>
+                <input
+                  type="text"
+                  value={updatedData.username}
+                  onChange={(e) => setUpdatedData({ ...updatedData, username: e.target.value })}
+                  className={errors.username ? "error" : ""}
+                />
+                {errors.username && <span className="error-text">{errors.username}</span>}
+              </div>
+
+              <div className="form-group">
+                <label>Email</label>
+                <input
+                  type="email"
+                  value={updatedData.email}
+                  onChange={(e) => setUpdatedData({ ...updatedData, email: e.target.value })}
+                  className={errors.email ? "error" : ""}
+                />
+                {errors.email && <span className="error-text">{errors.email}</span>}
+              </div>
+
+              <div className="form-group">
+                <label>Contact</label>
+                <input
+                  type="text"
+                  value={updatedData.contactNumber}
+                  onChange={(e) => setUpdatedData({ ...updatedData, contactNumber: e.target.value })}
+                  className={errors.contactNumber ? "error" : ""}
+                />
+                {errors.contactNumber && <span className="error-text">{errors.contactNumber}</span>}
+              </div>
+
+              <div className="form-group">
+                <label>Location</label>
+                <input
+                  type="text"
+                  value={updatedData.location}
+                  onChange={(e) => setUpdatedData({ ...updatedData, location: e.target.value })}
+                  className={errors.location ? "error" : ""}
+                />
+                {errors.location && <span className="error-text">{errors.location}</span>}
+              </div>
+            </div>
+
+            <div className="modal-footer">
               <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={cancelEditing}
+                className="btn-secondary"
+                onClick={() => setShowEditModal(false)}
               >
                 Cancel
               </button>
-            </Modal.Footer>
-          </Modal>
-          {showConfirmationPopup && (
-            <div className="confirmation-popup">
-              <h3>Are you sure you want to delete?</h3>
-              <div className="popup-buttons">
-                <button className="popup-button" onClick={handleConfirmDelete}>
-                  Yes
-                </button>
-                <button className="popup-button" onClick={handleCancelDelete}>
-                  No
-                </button>
-              </div>
+              <button
+                className="btn-primary"
+                onClick={handleUpdate}
+              >
+                Save Changes
+              </button>
             </div>
-          )}
+          </div>
         </div>
-      </div>
-      <ToastContainer /> {/* Toast container */}
-    </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modal-overlay">
+          <div className="modal-container small">
+            <div className="modal-header">
+              <h3>Confirm Deletion</h3>
+              <button
+                className="close-btn"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                <FiX />
+              </button>
+            </div>
+            <div className="modal-body">
+              <p>Are you sure you want to delete this user? This action cannot be undone.</p>
+            </div>
+            <div className="modal-footer">
+              <button
+                className="btn-secondary"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn-danger"
+                onClick={handleConfirmDelete}
+              >
+                Delete User
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ToastContainer position="bottom-right" />
+
+      <style jsx>{`
+        .user-list-container {
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          overflow: hidden;
+        }
+
+        .role-badge {
+          padding: 4px 12px;
+          border-radius: 12px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          text-transform: capitalize;
+        }
+        
+        .role-badge.admin {
+          background: #e0f2fe;
+          color: #0284c7;
+        }
+        
+        .role-badge.professional {
+          background: #f0fdf4;
+          color: #16a34a;
+        }
+        
+        .role-badge.client {
+          background: #f1f5f9;
+          color: #475569;
+        }
+
+        .action-buttons-row {
+          display: flex;
+          gap: 8px;
+        }
+
+        .icon-btn {
+          width: 32px;
+          height: 32px;
+          border-radius: 6px;
+          border: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .edit-btn {
+          background: #eff6ff;
+          color: #3b82f6;
+        }
+
+        .edit-btn:hover {
+          background: #dbeafe;
+        }
+
+        .delete-btn {
+          background: #fef2f2;
+          color: #ef4444;
+        }
+
+        .delete-btn:hover {
+          background: #fee2e2;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0,0,0,0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+        }
+
+        .modal-container {
+          background: white;
+          padding: 24px;
+          border-radius: 12px;
+          width: 100%;
+          max-width: 500px;
+          box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+
+        .modal-container.small {
+          max-width: 400px;
+        }
+
+        .modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+          margin: 0;
+          font-size: 1.25rem;
+          color: #1e293b;
+        }
+
+        .close-btn {
+          background: none;
+          border: none;
+          font-size: 1.25rem;
+          cursor: pointer;
+          color: #64748b;
+        }
+
+        .form-group {
+          margin-bottom: 16px;
+        }
+
+        .form-group label {
+          display: block;
+          margin-bottom: 6px;
+          font-size: 0.9rem;
+          font-weight: 500;
+          color: #475569;
+        }
+
+        .form-group input {
+          width: 100%;
+          padding: 10px;
+          border: 1px solid #e2e8f0;
+          border-radius: 6px;
+          font-size: 0.95rem;
+        }
+
+        .form-group input.error {
+          border-color: #ef4444;
+        }
+
+        .error-text {
+          font-size: 0.8rem;
+          color: #ef4444;
+          margin-top: 4px;
+          display: block;
+        }
+
+        .modal-footer {
+          display: flex;
+          justify-content: flex-end;
+          gap: 12px;
+          margin-top: 24px;
+        }
+
+        .btn-primary, .btn-secondary, .btn-danger {
+          padding: 8px 16px;
+          border-radius: 6px;
+          font-weight: 600;
+          font-size: 0.95rem;
+          border: none;
+          cursor: pointer;
+        }
+
+        .btn-primary {
+          background: #2563eb;
+          color: white;
+        }
+
+        .btn-secondary {
+          background: #f1f5f9;
+          color: #475569;
+        }
+
+        .btn-danger {
+          background: #ef4444;
+          color: white;
+        }
+      `}</style>
+    </DashboardLayout>
   );
 }
-
-const Actions = styled.div`
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-`;

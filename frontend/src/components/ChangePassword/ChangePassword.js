@@ -1,133 +1,13 @@
-// import React, { useState } from "react";
-// import { useAuthContext } from "../../hooks/useAuthContext";
-// import { toast } from "react-toastify"; // Import toast
-// import "react-toastify/dist/ReactToastify.css";
-// import "./ChangePassword.css";
-
-// const ChangePassword = () => {
-//   const { user } = useAuthContext();
-//   console.log("USER", user?.userId);
-
-//   const [formData, setFormData] = useState({
-//     currentPassword: "",
-//     newPassword: "",
-//   });
-//   console.log("Fd", formData);
-
-//   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-//   const [showNewPassword, setShowNewPassword] = useState(false);
-
-//   const handleChange = (e) => {
-//     setFormData({ ...formData, [e.target.name]: e.target.value });
-//   };
-
-//   const handleToggleCurrentPassword = () => {
-//     setShowCurrentPassword(!showCurrentPassword);
-//   };
-
-//   const handleToggleNewPassword = () => {
-//     setShowNewPassword(!showNewPassword);
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     try {
-//       const response = await fetch(
-//         "http://localhost:4000/api/user/user-changePassword",
-//         {
-//           method: "PUT",
-//           headers: {
-//             "Content-Type": "application/json",
-//             body: { userId: user?.userId, formData },
-//             Authorization: `Bearer ${user?.token}`,
-//           },
-//           body: JSON.stringify(formData),
-//         }
-//       );
-
-//       if (!response.ok) {
-//         const errorData = await response.json();
-//         toast.error(errorData.message); // Display error message using toast
-//         return;
-//       }
-
-//       toast.success("Password changed successfully"); // Display success message using toast
-//     } catch (error) {
-//       console.error("Error changing password:", error.message);
-//       toast.error("An error occurred while changing the password"); // Display error message using toast
-//     }
-//   };
-
-//   return (
-//     <div>
-//       <h2 className="change-password-title">Change Password</h2>
-//       <div className="change-password-container">
-//         <form onSubmit={handleSubmit} className="change-pass-form">
-//           <div className="form-group">
-//             <label htmlFor="currentPassword" className="label">
-//               Current Password:
-//             </label>
-//             <div className="password-toggle">
-//               <input
-//                 className="input-field"
-//                 type={showCurrentPassword ? "text" : "password"}
-//                 id="currentPassword"
-//                 name="currentPassword"
-//                 value={formData.currentPassword}
-//                 onChange={handleChange}
-//               />
-//               <button
-//                 type="button"
-//                 onClick={handleToggleCurrentPassword}
-//                 className="toggle-btn"
-//               >
-//                 {showCurrentPassword ? "Hide" : "Show"}
-//               </button>
-//             </div>
-//           </div>
-//           <div className="form-group">
-//             <label htmlFor="newPassword" className="label">
-//               New Password:
-//             </label>
-//             <div className="password-toggle">
-//               <input
-//                 className="input-field"
-//                 type={showNewPassword ? "text" : "password"}
-//                 id="newPassword"
-//                 name="newPassword"
-//                 value={formData.newPassword}
-//                 onChange={handleChange}
-//               />
-//               <button
-//                 type="button"
-//                 onClick={handleToggleNewPassword}
-//                 className="toggle-btn"
-//               >
-//                 {showNewPassword ? "Hide" : "Show"}
-//               </button>
-//             </div>
-//           </div>
-//           <button type="submit" className="btn btn-primary submit-btn">
-//             Change Password
-//           </button>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default ChangePassword;
-
 import React, { useState, useEffect } from "react";
+import DashboardLayout from "../../components/DashboardLayout/DashboardLayout";
 import { useAuthContext } from "../../hooks/useAuthContext";
-import { toast } from "react-toastify"; // Import toast
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import "./ChangePassword.css";
+import { FiLock, FiEye, FiEyeOff, FiSave } from "react-icons/fi";
 
-const ChangePassword = () => {
+const ChangePassword = ({ onClose }) => {
   const { user } = useAuthContext();
-  console.log("USER", user);
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     userId: "",
@@ -135,32 +15,36 @@ const ChangePassword = () => {
     newPassword: "",
   });
 
-  // Update formData whenever the user object updates
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+
   useEffect(() => {
     if (user) {
       setFormData((fData) => ({ ...fData, userId: user.userId }));
     }
   }, [user]);
 
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleToggleCurrentPassword = () => {
-    setShowCurrentPassword(!showCurrentPassword);
-  };
-
-  const handleToggleNewPassword = () => {
-    setShowNewPassword(!showNewPassword);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
+      if (!formData.currentPassword || !formData.newPassword) {
+        toast.error("Please fill in all fields");
+        setLoading(false);
+        return;
+      }
+
+      if (formData.newPassword.length < 6) {
+        toast.warning("New password must be at least 6 characters");
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch(
         "http://localhost:4000/api/user/user-changePassword",
         {
@@ -173,74 +57,107 @@ const ChangePassword = () => {
         }
       );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        toast.error(errorData.message); // Display error message using toast
-        return;
-      }
+      const res = await response.json();
 
-      toast.success("Password changed successfully"); // Display success message using toast
+      if (response.ok) {
+        toast.success(res.message || "Password changed successfully");
+        setFormData(prev => ({ ...prev, currentPassword: "", newPassword: "" }));
+      } else {
+        toast.error(res.message || "Failed to change password");
+      }
     } catch (error) {
       console.error("Error changing password:", error.message);
-      toast.error("An error occurred while changing the password"); // Display error message using toast
+      toast.error("An error occurred while changing the password");
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <div>
-      <h2 className="change-password-title">Change Password</h2>
-      <div className="change-password-container">
-        <form onSubmit={handleSubmit} className="change-pass-form">
-          <div className="form-group">
-            <label htmlFor="currentPassword" className="label">
-              Current Password:
-            </label>
-            <div className="password-toggle">
-              <input
-                className="input-field"
-                type={showCurrentPassword ? "text" : "password"}
-                id="currentPassword"
-                name="currentPassword"
-                value={formData.currentPassword}
-                onChange={handleChange}
-              />
-              <button
-                type="button"
-                onClick={handleToggleCurrentPassword}
-                className="toggle-btn"
-              >
-                {showCurrentPassword ? "Hide" : "Show"}
-              </button>
+  const Content = () => (
+    <div className={`change-password-container fade-in ${onClose ? 'modal-mode' : ''}`}>
+      <form onSubmit={handleSubmit} className="modern-form">
+        <div className="form-section">
+          {!onClose && <h3 className="section-title">Change Password</h3>}
+
+          <div className="form-grid">
+            <div className="form-group full-width">
+              <label htmlFor="currentPassword">Current Password</label>
+              <div className="input-wrapper">
+                <FiLock className="input-icon" />
+                <input
+                  type={showCurrentPassword ? "text" : "password"}
+                  id="currentPassword"
+                  name="currentPassword"
+                  value={formData.currentPassword}
+                  onChange={handleChange}
+                  className="modern-input"
+                  placeholder="Enter current password"
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                >
+                  {showCurrentPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
+              </div>
+            </div>
+
+            <div className="form-group full-width">
+              <label htmlFor="newPassword">New Password</label>
+              <div className="input-wrapper">
+                <FiLock className="input-icon" />
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  id="newPassword"
+                  name="newPassword"
+                  value={formData.newPassword}
+                  onChange={handleChange}
+                  className="modern-input"
+                  placeholder="Enter new password"
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                >
+                  {showNewPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
+              </div>
             </div>
           </div>
-          <div className="form-group">
-            <label htmlFor="newPassword" className="label">
-              New Password:
-            </label>
-            <div className="password-toggle">
-              <input
-                className="input-field"
-                type={showNewPassword ? "text" : "password"}
-                id="newPassword"
-                name="newPassword"
-                value={formData.newPassword}
-                onChange={handleChange}
-              />
-              <button
-                type="button"
-                onClick={handleToggleNewPassword}
-                className="toggle-btn"
-              >
-                {showNewPassword ? "Hide" : "Show"}
-              </button>
-            </div>
+
+          <div className="form-actions">
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? (
+                <>
+                  <span className="spinner-small"></span> Updating...
+                </>
+              ) : (
+                <>
+                  <FiSave /> Change Password
+                </>
+              )}
+            </button>
           </div>
-          <button type="submit" className="btn btn-primary submit-btn">
-            Change Password
-          </button>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
+  );
+
+  if (onClose) {
+    return (
+      <div className="modern-modal-content">
+        <h2 className="modal-title">Change Password</h2>
+        <Content />
+      </div>
+    );
+  }
+
+  return (
+    <DashboardLayout title="Security Settings" subtitle="Update your password and secure your account">
+      <Content />
+    </DashboardLayout>
   );
 };
 

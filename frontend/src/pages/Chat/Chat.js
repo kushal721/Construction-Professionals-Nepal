@@ -1,13 +1,10 @@
-
 import React, { useState, useEffect, useRef } from "react";
-import "./Chat.css";
+import { FiMessageCircle, FiSearch, FiSend } from "react-icons/fi";
+import { io } from "socket.io-client";
+import { useAuthContext } from "../../hooks/useAuthContext";
 import Conversation from "./Conversation";
 import Chatbox from "./Chatbox";
-import { io } from "socket.io-client";
-import { useNavigate } from "react-router-dom";
-import { useAuthContext } from "../../hooks/useAuthContext";
-import Sidebar from "../../components/Sidebar/Sidebar";
-import NavbarComp from "../../components/Navbar/Navbar";
+import "./Chat.css";
 
 const Chat = () => {
   const { user } = useAuthContext();
@@ -16,9 +13,8 @@ const Chat = () => {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [sendMessage, setSendMessage] = useState(null);
   const [receiveMessage, setReceiveMessage] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const socket = useRef();
-  const navigate = useNavigate(); // Corrected useNavigate typo
-  console.log("auth user", user);
 
   // Send message to socket server
   useEffect(() => {
@@ -75,18 +71,42 @@ const Chat = () => {
     return online ? true : false;
   };
 
+  const filteredChats = chats.filter((chat) =>
+    chat.members.some(member =>
+      member.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
+
   return (
-    <div className="container-fluid chat-container">
-      <div className="row">
-        <div className="chat-l col-md-3">
-          {" "}
-          {/* Corrected class name */}
-          <div className="c-h2">Chats</div>
-          <div className="Chat-list">
-            {chats.map((chat) => (
+    <div className="chat-page">
+      {/* Chat Sidebar */}
+      <aside className="chat-sidebar">
+        <div className="chat-sidebar-header">
+          <h2 className="chat-sidebar-title">
+            <FiMessageCircle />
+            Messages
+          </h2>
+          <span className="chat-count">{chats.length}</span>
+        </div>
+
+        {/* Search */}
+        <div className="chat-search">
+          <FiSearch className="chat-search-icon" />
+          <input
+            type="text"
+            placeholder="Search conversations..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        {/* Chat List */}
+        <div className="chat-list">
+          {filteredChats.length > 0 ? (
+            filteredChats.map((chat) => (
               <div
                 key={chat._id}
-                className="chat-item"
+                className={`chat-list-item ${currentChat?._id === chat._id ? 'active' : ''}`}
                 onClick={() => setCurrentChat(chat)}
               >
                 <Conversation
@@ -95,20 +115,36 @@ const Chat = () => {
                   online={checkOnlineStatus(chat)}
                 />
               </div>
-            ))}
-          </div>
+            ))
+          ) : (
+            <div className="chat-empty-list">
+              <p>No conversations yet</p>
+            </div>
+          )}
         </div>
-        <div className="col-md-9">
-          <div className="chat-content">
-            <Chatbox
-              chat={currentChat}
-              currentUser={user?.userId}
-              setSendMessage={setSendMessage}
-              receiveMessage={receiveMessage}
-            />
+      </aside>
+
+      {/* Chat Main */}
+      <main className="chat-main">
+        {currentChat ? (
+          <Chatbox
+            chat={currentChat}
+            currentUser={user?.userId}
+            setSendMessage={setSendMessage}
+            receiveMessage={receiveMessage}
+          />
+        ) : (
+          <div className="chat-no-selection">
+            <div className="chat-no-selection-content">
+              <div className="chat-no-selection-icon">
+                <FiMessageCircle />
+              </div>
+              <h3>Select a Conversation</h3>
+              <p>Choose a chat from the sidebar to start messaging</p>
+            </div>
           </div>
-        </div>
-      </div>
+        )}
+      </main>
     </div>
   );
 };

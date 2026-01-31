@@ -1,29 +1,20 @@
-
 import React, { useEffect, useState } from "react";
-import Sidebar from "../../../components/Sidebar/Sidebar";
-import AddInformation from "./AddInformation"; // Import the AddInformation component
-import EditProfile from "./EditProfile"; // Import the EditProfile component
-import "./ProfeProfile.css";
+import { FiMail, FiPhone, FiEdit2, FiPlus, FiLock, FiBriefcase, FiBook, FiAward, FiUser, FiX } from "react-icons/fi";
+import DashboardLayout from "../../../components/DashboardLayout/DashboardLayout";
+import AddInformation from "./AddInformation";
+import EditProfile from "./EditProfile";
 import ChangePassword from "../../../components/ChangePassword/ChangePassword";
 import { useAuthContext } from "../../../hooks/useAuthContext";
-import styled from "styled-components";
+import "./ProfeProfile.css";
 
 const ProfeProfile = () => {
-  // State variables to control the visibility of the Add Information popup and Edit Information popup
   const [showAddInfoPopup, setShowAddInfoPopup] = useState(false);
   const [showEditProfilePopup, setShowEditProfilePopup] = useState(false);
   const [showChangePasswordPopup, setShowChangePasswordPopup] = useState(false);
   const [userData, setUserData] = useState({});
   const [professionalData, setProfessionalData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [profileImage, setProfileImage] = useState({ myProfile: "" });
   const { user } = useAuthContext();
-  const professionalId = user?.userId;
-  const userId = user?.userId;
-  console.log("user data", userData);
-  console.log("p data", professionalData);
-  console.log("pid", professionalId);
-  console.log("profile", user?.profile);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -32,23 +23,20 @@ const ProfeProfile = () => {
           const response = await fetch(
             `http://localhost:4000/api/userr/${user.userId}`
           );
-          if (!response.ok) {
-            throw new Error("Failed to fetch user data");
+          if (response.ok) {
+            const data = await response.json();
+            setUserData(data);
           }
-          const data = await response.json();
-          setUserData(data);
         }
       } catch (error) {
         console.error("Error fetching user data: ", error);
       }
     };
 
-    fetchUserData();
-
     const fetchProfessionalData = async () => {
       try {
         const response = await fetch(
-          `http://localhost:4000/api/userr/professionals/${professionalId}`,
+          `http://localhost:4000/api/userr/professionals/${user?.userId}`,
           {
             headers: {
               Authorization: `Bearer ${user?.token}`,
@@ -58,200 +46,196 @@ const ProfeProfile = () => {
         if (response.ok) {
           const data = await response.json();
           setProfessionalData(data);
-          console.log(data, "data");
-          setLoading(false);
         } else {
-          throw new Error("Failed to fetch professional data");
+          console.log("Professional data returned status:", response.status);
         }
       } catch (error) {
-        console.error("Error fetching professional data:", error.message);
+        console.error("Error fetching professional data:", error);
+      } finally {
         setLoading(false);
       }
     };
 
     if (user?.token) {
-      fetchProfessionalData();
+      Promise.all([fetchUserData(), fetchProfessionalData()]);
+    } else if (user === null) {
+      // Handle no user case if needed, or wait for auth
     }
-  }, [user?.token]);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-  };
+  }, [user]);
 
   if (loading) {
-    return <Loading>Loading...</Loading>;
+    return (
+      <DashboardLayout title="My Profile" subtitle="Manage your professional profile">
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Loading profile...</p>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   return (
-    <>
-      <div className="maindiv">
-        <div className="sidebar">
-          <Sidebar />
+    <DashboardLayout title="My Profile" subtitle="Manage your professional profile">
+      <div className="profile-wrapper">
+        {/* Profile Header Card */}
+        <div className="profile-header-card">
+          <div className="profile-cover"></div>
+          <div className="profile-main-info">
+            <div className="profile-avatar-wrapper">
+              {userData?.profile?.length > 0 ? (
+                <img
+                  src={`http://localhost:4000/${userData?.profile}`}
+                  alt="Profile"
+                  className="profile-avatar-lg"
+                />
+              ) : (
+                <div className="profile-avatar-placeholder">
+                  <FiUser />
+                </div>
+              )}
+            </div>
+            <div className="profile-text-info">
+              <h1 className="profile-name">{userData?.username}</h1>
+              <p className="profile-role">{professionalData?.specialization || "Professional"}</p>
+              <div className="profile-contacts">
+                <span className="contact-pill">
+                  <FiMail /> {userData?.email}
+                </span>
+                <span className="contact-pill">
+                  <FiPhone /> {userData?.contactNumber || "No contact info"}
+                </span>
+              </div>
+            </div>
+            <div className="profile-actions-top">
+              <button
+                className="btn-secondary-sm"
+                onClick={() => setShowChangePasswordPopup(true)}
+              >
+                <FiLock /> Change Password
+              </button>
+              <button
+                className="btn-primary-sm"
+                onClick={() => setShowEditProfilePopup(true)}
+              >
+                <FiEdit2 /> Edit Profile
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="profile-container">
-          <div className="profile-content">
-            <div className="page-name">
-              <div className="action-buttons">
-                <button
-                  className="action-button"
-                  onClick={() => setShowAddInfoPopup(true)} // Show the Add Information popup when clicked
-                >
-                  Add Information
-                </button>
-                <button
-                  className="action-button"
-                  onClick={() => setShowEditProfilePopup(true)} // Show the Edit Profile popup when clicked
-                >
-                  Edit Profile
-                </button>
-                <button
-                  className="action-button"
-                  onClick={() => setShowChangePasswordPopup(true)}
-                >
-                  Change Password
-                </button>
-              </div>
-            </div>
 
-            {/* Personal Information */}
-            <div className="profile-section">
-              <div className="profile-info">
-                <div className="profile-picture">
-                  {userData?.profile?.length > 0 ? (
-                    <img
-                      src={`http://localhost:4000/${userData?.profile}`}
-                      alt="Profile Picture"
-                      className="profile-img"
-                    />
-                  ) : (
-                    <img
-                      src="./profile.png"
-                      alt="Profile Picture"
-                      className="profile-img"
-                    />
-                  )}
-                </div>
-                {/* <input
-                    className="upload-input"
-                    type="file"
-                    lable="Image"
-                    name="profile"
-                    id="profile-upload"
-                    accept=".jpeg, .png, .jpg"
-                  /> */}
-
-                <div className="info">
-                  <span className="label">
-                    Full Name: {userData?.username}{" "}
-                  </span>
-
-                  <span className="label">Email: {userData?.email}</span>
-                  <span className="label">
-                    Phone: {userData?.contactNumber}
-                  </span>
-                </div>
-              </div>
-            </div>
-
+        {/* Content Grid */}
+        <div className="profile-grid">
+          {/* Main Column */}
+          <div className="profile-col-main">
             {/* Professional Experience */}
-            <div className="profile-section">
-              <h2 className="section-title">Professional Experience</h2>
-              <div className="experience-item">
-                <h3 className="experience-title">
-                  Specialization: {professionalData?.specialization}
+            <div className="profile-card">
+              <div className="card-header-flex">
+                <h3 className="section-title">
+                  <FiBriefcase /> Experience & Bio
                 </h3>
-                <p className="experience-details">
-                  Experience: {professionalData?.experience}
-                </p>
-                <p className="experience-description">
-                  {professionalData?.description}
-                </p>
               </div>
-              {/* Add more experience items */}
-            </div>
-
-            {/* Skills */}
-            <div className="profile-section">
-              <h2 className="section-title">Skills</h2>
-              <p>{professionalData?.skills}</p>
+              <div className="card-content">
+                <div className="info-block">
+                  <label>Professional Bio</label>
+                  <p>{professionalData?.description || "No description added yet."}</p>
+                </div>
+                <div className="info-row">
+                  <div className="info-block">
+                    <label>Specialization</label>
+                    <p className="highlight">{professionalData?.specialization || "Not specified"}</p>
+                  </div>
+                  <div className="info-block">
+                    <label>Years of Experience</label>
+                    <p>{professionalData?.experience || "Not specified"}</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Education */}
-            <div className="profile-section">
-              <h2 className="section-title">Education</h2>
-              <div className="education-item">
-                <p className="education-details">
-                  {professionalData?.education}
-                </p>
+            <div className="profile-card">
+              <div className="card-header-flex">
+                <h3 className="section-title">
+                  <FiBook /> Education
+                </h3>
               </div>
-              {/* Add more education items */}
+              <div className="card-content">
+                <div className="education-item">
+                  <p>{professionalData?.education || "No education details added."}</p>
+                </div>
+              </div>
             </div>
+          </div>
 
-            {/* Contact Information */}
-
-            {/* Add Information Popup */}
-            {showAddInfoPopup && (
-              <div className="add-info-popup">
-                <AddInformation />
+          {/* Side Column */}
+          <div className="profile-col-side">
+            {/* Skills */}
+            <div className="profile-card">
+              <div className="card-header-flex">
+                <h3 className="section-title">
+                  <FiAward /> Skills
+                </h3>
                 <button
-                  className="close-popup-btn"
-                  onClick={() => setShowAddInfoPopup(false)} // Hide the Add Information popup when clicked
+                  className="btn-icon-only"
+                  onClick={() => setShowAddInfoPopup(true)}
+                  title="Add Skills/Info"
                 >
-                  ❌
+                  <FiPlus />
                 </button>
               </div>
-            )}
-
-            {/* Edit Profile Popup */}
-            {showEditProfilePopup && (
-              <div className="edit-profile-popup">
-                <EditProfile />
-                <button
-                  className="close-popup-btn"
-                  onClick={() => setShowEditProfilePopup(false)} // Hide the Edit Profile popup when clicked
-                >
-                  ❌
-                </button>
+              <div className="card-content">
+                <div className="skills-container">
+                  {professionalData?.skills ? (
+                    professionalData.skills.split(',').map((skill, index) => (
+                      <span key={index} className="skill-tag">
+                        {skill.trim()}
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-muted">No skills listed</p>
+                  )}
+                </div>
               </div>
-            )}
-
-            {/* change password Popup */}
-            {showChangePasswordPopup && (
-              <div className="change-password-popup">
-                <ChangePassword />
-                <button
-                  className="close-popup-btn"
-                  onClick={() => setShowChangePasswordPopup(false)} // Hide the change password popup when clicked
-                >
-                  ❌
-                </button>
-              </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
-    </>
+
+      {/* Modals */}
+      {showAddInfoPopup && (
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <button className="modal-close" onClick={() => setShowAddInfoPopup(false)}>
+              <FiBriefcase /> Back
+            </button>
+            <AddInformation onClose={() => setShowAddInfoPopup(false)} />
+          </div>
+        </div>
+      )}
+
+      {showEditProfilePopup && (
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <button className="modal-close" onClick={() => setShowEditProfilePopup(false)}>
+              <FiX />
+            </button>
+            <EditProfile onClose={() => setShowEditProfilePopup(false)} />
+          </div>
+        </div>
+      )}
+
+      {showChangePasswordPopup && (
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <button className="modal-close" onClick={() => setShowChangePasswordPopup(false)}>
+              <FiX />
+            </button>
+            <ChangePassword onClose={() => setShowChangePasswordPopup(false)} />
+          </div>
+        </div>
+      )}
+    </DashboardLayout>
   );
 };
 
-const Loading = styled.div`
-  margin-top: 50px;
-  text-align: center;
-  font-size: 24px;
-  color: #6a5acd;
-`;
-
 export default ProfeProfile;
-
-function convertToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const fileReader = new FileReader();
-    fileReader.readAsDataURL(file);
-    fileReader.onload = () => {
-      resolve(fileReader.result);
-    };
-    fileReader.onerror = (error) => {
-      reject(error);
-    };
-  });
-}

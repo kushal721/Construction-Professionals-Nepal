@@ -1,51 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { FiMail, FiPhone, FiMapPin, FiBriefcase, FiAward, FiBook, FiMessageSquare, FiCalendar, FiArrowRight } from "react-icons/fi";
 import NavbarComp from "../../components/Navbar/Navbar";
+import Footer from "../../components/Footer/Footer";
 import { useAuthContext } from "../../hooks/useAuthContext";
 import "./ProfessionalDesc.css";
-import DesignCard from "../../components/Cards/DesignCard";
 
 const ProfessionalDesc = () => {
-  const { id } = useParams(); // Get the professional ID from the route parameters
-  const { user } = useAuthContext(); // Access the user authentication state
+  const { id } = useParams();
+  const { user } = useAuthContext();
 
-  const [professionalPersonalDesc, setProfessionalPersonalDesc] =
-    useState(null); // Set initial state to null
+  const [professionalPersonalDesc, setProfessionalPersonalDesc] = useState(null);
   const [professionalDesc, setProfessionalDesc] = useState(null);
-  const [designs, setDesigns] = useState([]); // Initialize designs state as an empty array
-  console.log("professional personal", professionalPersonalDesc);
-  console.log("professional desc", professionalDesc);
-  console.log("designs", designs);
-
-  // Function to handle the message request
-  const handleMessageRequest = async () => {
-    if (!user) {
-      console.error("User object is null.");
-      return;
-    }
-
-    try {
-      const response = await fetch("http://localhost:4000/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          senderId: user.userId,
-          receiverId: id,
-        }),
-      });
-      if (response.ok) {
-        // Handle success
-        console.log("Message sent successfully");
-        // You can update the UI or show a success message here if needed
-      } else {
-        console.error("Failed to send message");
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
-    }
-  };
+  const [designs, setDesigns] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Check if user object exists before logging userId
   useEffect(() => {
@@ -55,169 +23,192 @@ const ProfessionalDesc = () => {
   }, [user]);
 
   useEffect(() => {
-    const fetchProfessional = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(
-          `http://localhost:4000/api/userr/professionals/personal/${id}`
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setProfessionalPersonalDesc(data); // Set the professionalDesc state with fetched data
-          console.log("data", data);
-        } else {
-          console.error("Failed to fetch professional details");
-        }
+        const [personalRes, profRes, designsRes] = await Promise.all([
+          fetch(`http://localhost:4000/api/userr/professionals/personal/${id}`),
+          fetch(`http://localhost:4000/api/userr/professionals/${id}`),
+          fetch(`http://localhost:4000/api/designs/${id}/designs`)
+        ]);
+
+        if (personalRes.ok) setProfessionalPersonalDesc(await personalRes.json());
+        if (profRes.ok) setProfessionalDesc(await profRes.json());
+        if (designsRes.ok) setDesigns(await designsRes.json());
+
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching professional details:", error);
+        setLoading(false);
       }
     };
 
-    fetchProfessional();
-  }, [id]); // Fetch professional details when ID changes
+    fetchData();
+  }, [id, user]);
 
-  useEffect(() => {
-    const fetchProfessional = async () => {
-      try {
-        const response = await fetch(
-          `http://localhost:4000/api/userr/professionals/${id}`
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setProfessionalDesc(data); // Set the professionalDesc state with fetched data
-          console.log("data", data);
-        } else {
-          console.error("Failed to fetch professional details");
-        }
-      } catch (error) {
-        console.error("Error fetching professional details:", error);
-      }
-    };
-    if (user?.token) {
-      fetchProfessional();
+  const handleMessageRequest = async () => {
+    if (!user) return;
+    try {
+      await fetch("http://localhost:4000/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ senderId: user.userId, receiverId: id }),
+      });
+    } catch (error) {
+      console.error("Error sending message:", error);
     }
-  }, [id]);
+  };
 
-  useEffect(() => {
-    const fetchDesigns = async () => {
-      try {
-        const response = await fetch(
-          `http://localhost:4000/api/designs/${id}/designs`
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setDesigns(data); // Set the designs state with fetched data
-          console.log("designs", data);
-        } else {
-          console.error("Failed to fetch professional designs");
-        }
-      } catch (error) {
-        console.error("Error fetching professional designs:", error);
-      }
-    };
+  if (loading) {
+    return (
+      <div className="prof-loading-screen">
+        <div className="spinner"></div>
+      </div>
+    );
+  }
 
-    fetchDesigns();
-  }, [id]); // Fetch designs when ID changes
-
-  // Render loading state while waiting for data to be fetched
-  // if (!professionalDesc || designs.length === 0) {
-  //   return (
-  //     <div>
-  //       <NavbarComp />
-  //       <div className="container">
-  //         <h2>Loading...</h2>
-  //       </div>
-  //     </div>
-  //   );
-  // }
-
-  // Render the professional description and designs once data is fetched
-  // Render the professional description and designs once data is fetched
   return (
-    <div>
-      <div className="profedesc-container">
-        <div className="professional-details">
-          {professionalPersonalDesc && (
-            <div className="personal-info">
+    <div className="page-wrapper">
+      <NavbarComp />
+
+      <div className="prof-profile-container">
+        {/* Header Section */}
+        <div className="prof-header">
+          <div className="header-bg"></div>
+          <div className="header-content">
+            <div className="profile-img-container">
               {professionalPersonalDesc?.profile ? (
                 <img
                   src={`http://localhost:4000/${professionalPersonalDesc.profile}`}
-                  alt="Profile Picture"
-                  className="profile-image"
+                  alt={professionalPersonalDesc.username}
+                  className="profile-img-lg"
                 />
               ) : (
-                <img
-                  src="./profile.png"
-                  alt="Profile Picture"
-                  className="profile-image"
-                />
+                <div className="profile-placeholder-lg">{professionalPersonalDesc?.username?.charAt(0)}</div>
               )}
-              <h1>{professionalPersonalDesc.username}</h1>
             </div>
-          )}
 
-          {professionalDesc && (
-            <div className="professional-info">
-              <h1>Professional Details</h1>
-              <div>
-                <h2>{professionalPersonalDesc?.email}</h2>
-                <h2>Specialization: {professionalDesc?.specialization}</h2>
-                <h3>Experience: {professionalDesc?.experience}</h3>
-                <p>Skills: {professionalDesc?.skills}</p>
-                <p>Education: {professionalDesc?.education}</p>
-                <p>Contact: {professionalDesc?.contact}</p>
+            <div className="profile-identity">
+              <h1 className="prof-name">{professionalPersonalDesc?.username}</h1>
+              <p className="prof-role">{professionalDesc?.specialization || "Professional"}</p>
+              <div className="prof-location">
+                <FiMapPin /> {professionalPersonalDesc?.location || "Nepal"}
               </div>
             </div>
-          )}
-          {user ? (
-            <div className="booking-links">
-              <Link
-                to={`/chat`}
-                onClick={handleMessageRequest}
-                className="btn-book-appoint"
-              >
-                Message Now
-              </Link>
-              <Link to={`/${id}/booking`} className="btn-book-appoint BookAppo">
-                Book Appointment
-              </Link>
+
+            <div className="prof-actions">
+              {user ? (
+                <>
+                  <Link to="/chat" onClick={handleMessageRequest} className="action-btn message-btn">
+                    <FiMessageSquare /> Message
+                  </Link>
+                  <Link to={`/${id}/booking`} className="action-btn book-btn">
+                    <FiCalendar /> Book Appointment
+                  </Link>
+                </>
+              ) : (
+                <Link to="/login" className="action-btn login-btn">
+                  Login to Connect
+                </Link>
+              )}
             </div>
-          ) : (
-            <p>Please log in to book an appointment</p>
-          )}
+          </div>
         </div>
-        <div className="professional-designs">
-          {designs.length > 0 && (
-            <div className="designs-container">
-              <h1>Professional Designs</h1>
-              <div className="designs-grid">
-                {designs.map((design) => (
-                  <div key={design._id} className="design-card">
-                    <Link to={`/design-desc/${design._id}`} className="card">
-                      <div className="imag-container">
-                        {design.designImages.length > 0 && (
-                          <img
-                            src={`http://localhost:4000/${design.designImages[0]}`}
-                            alt={``}
-                          />
+
+        <div className="prof-layout-grid">
+          {/* Left Column: Details */}
+          <div className="prof-sidebar">
+            {/* Contact Info */}
+            <div className="info-card">
+              <h3>Contact Information</h3>
+              <div className="contact-list">
+                <div className="contact-item">
+                  <FiMail />
+                  <span>{professionalPersonalDesc?.email}</span>
+                </div>
+                {professionalPersonalDesc?.contactNumber && (
+                  <div className="contact-item">
+                    <FiPhone />
+                    <span>{professionalPersonalDesc.contactNumber}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Skills */}
+            <div className="info-card">
+              <h3><FiAward /> Skills</h3>
+              <div className="skills-tags">
+                {professionalDesc?.skills ? (
+                  professionalDesc.skills.split(',').map((skill, i) => (
+                    <span key={i} className="skill-pill">{skill.trim()}</span>
+                  ))
+                ) : "No skills listed"}
+              </div>
+            </div>
+
+            {/* Education */}
+            <div className="info-card">
+              <h3><FiBook /> Education</h3>
+              <p className="edu-text">{professionalDesc?.education || "Not specified"}</p>
+            </div>
+          </div>
+
+          {/* Right Column: Bio & Portfolio */}
+          <div className="prof-main-content">
+            {/* About */}
+            <div className="content-section">
+              <h2 className="section-head"><FiBriefcase /> About Potential</h2>
+              <div className="about-text">
+                <p>
+                  <strong>Experience:</strong> {professionalDesc?.experience || "N/A"}
+                </p>
+                <p>
+                  {professionalDesc?.description || "No description provided."}
+                </p>
+              </div>
+            </div>
+
+            {/* Designs Portfolio */}
+            <div className="content-section">
+              <div className="section-header-row">
+                <h2 className="section-head"><FiBriefcase /> Portfolio</h2>
+                <span className="count-badge">{designs.length} Designs</span>
+              </div>
+
+              {designs.length > 0 ? (
+                <div className="portfolio-grid">
+                  {designs.map((design) => (
+                    <Link to={`/design-desc/${design._id}`} key={design._id} className="portfolio-card">
+                      <div className="portfolio-img-wrap">
+                        {design.designImages.length > 0 ? (
+                          <img src={`http://localhost:4000/${design.designImages[0]}`} alt={design.designName} />
+                        ) : (
+                          <div className="no-img">No Image</div>
                         )}
-                      </div>
-                      <div className="card-content">
-                        <div className="header">
-                          <h5 className="title">{design.designName}</h5>
-                          <p className="rating">★ {design.averageRating}</p>
+                        <div className="overlay">
+                          <span><FiArrowRight /> View Details</span>
                         </div>
-                        <p className="short-description">
-                          {design.designDescription}
-                        </p>
+                      </div>
+                      <div className="portfolio-info">
+                        <h4>{design.designName}</h4>
+                        <div className="portfolio-meta">
+                          <span className="rating">★ {design.averageRating || 0}</span>
+                          <span className="category">{design.designCategory}</span>
+                        </div>
                       </div>
                     </Link>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-portfolio">
+                  <p>No designs uploaded yet.</p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

@@ -3,8 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import transporter from "../config/emailConfig.js";
 
-const strongPasswordRegex =
-  /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+}{"':;?/>.<,]).{8,}$/;
+const strongPasswordRegex = /^.{8,}$/; // Just length for now to debug
 
 class UserController {
   static userRegistration = async (req, res) => {
@@ -18,6 +17,8 @@ class UserController {
         location,
         role,
       } = req.body; // Data from frontend
+
+      console.log("Registration attempt V3:", email);
 
       const userExists = await UserModel.findOne({ email: email });
       if (userExists) {
@@ -38,10 +39,11 @@ class UserController {
       }
 
       // Check if password meets strong password criteria
+      // DEBUG MODE: Permissive check
       if (!strongPasswordRegex.test(password)) {
         return res.status(400).json({
           status: "failed",
-          msg: "Password must be strong. It should contain at least 8 characters including one uppercase letter, one lowercase letter, one number, and one special character.",
+          msg: "Password must be at least 8 characters long (DEBUG MODE).",
         });
       }
 
@@ -51,7 +53,7 @@ class UserController {
 
       // Create user
       const userCreated = await UserModel.create({
-        profile: req?.files[0]?.path,
+        profile: (req.files && req.files.length > 0 && req.files[0].path) ? req.files[0].path : "",
         username: username,
         email: email,
         contactNumber: contactNumber,

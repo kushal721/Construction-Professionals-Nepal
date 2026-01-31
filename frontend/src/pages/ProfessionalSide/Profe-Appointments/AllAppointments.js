@@ -1,17 +1,17 @@
-
 import React, { useState, useEffect } from "react";
-import Sidebar from "../../../components/Sidebar/Sidebar";
+import DashboardLayout from "../../../components/DashboardLayout/DashboardLayout";
 import { useAuthContext } from "../../../hooks/useAuthContext";
 import "./ProfeAppointments.css";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { FiCalendar, FiClock, FiMapPin, FiEdit2, FiTrash2, FiSave, FiX, FiCheck } from "react-icons/fi";
 
 const AllAppointments = () => {
   const { id } = useParams();
   const [appointments, setAppointments] = useState([]);
   const [editAppointment, setEditAppointment] = useState(null);
   const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { user } = useAuthContext();
 
   useEffect(() => {
@@ -30,9 +30,12 @@ const AllAppointments = () => {
           setAppointments(data);
         } else {
           console.error("Failed to fetch appointments");
+          toast.error("Failed to fetch appointments");
         }
       } catch (error) {
         console.error("Error fetching appointments:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -90,20 +93,14 @@ const AllAppointments = () => {
   };
 
   const handleRemoveAppointment = (appointment) => {
-    if (!appointment) {
-      console.error("No appointment selected for deletion");
-      return;
-    }
-    setEditAppointment(appointment); // Set the appointment to be deleted
-    setShowConfirmationPopup(true); // Display confirmation popup
+    if (!appointment) return;
+    setEditAppointment(appointment);
+    setShowConfirmationPopup(true);
   };
 
   const handleConfirmDelete = async () => {
     try {
-      if (!editAppointment || !editAppointment._id) {
-        console.error("No appointment selected for deletion");
-        return;
-      }
+      if (!editAppointment || !editAppointment._id) return;
 
       const response = await fetch(
         `http://localhost:4000/api/appointments/${editAppointment._id}`,
@@ -121,6 +118,7 @@ const AllAppointments = () => {
         setAppointments(updatedAppointments);
         toast.success("Appointment removed successfully");
         setShowConfirmationPopup(false);
+        setEditAppointment(null);
       } else {
         const errorMessage = await response.text();
         toast.error(`Failed to remove appointment: ${errorMessage}`);
@@ -131,133 +129,139 @@ const AllAppointments = () => {
     }
   };
 
-  const handleCancelDelete = () => {
-    setShowConfirmationPopup(false);
-  };
-
   return (
-    <div className="maindiv">
-      <div className="sidebar">
-        <Sidebar />
-      </div>
-      <div className="appointments-container">
-        <div className="content">
-          <div className="page-name">
-            <h1 className="page-title">Created Appointments</h1>
-            <table className="appointment-table">
-              <thead>
-                <tr>
-                  <th className="table-heading">Date</th>
-                  <th className="table-heading">Start Time</th>
-                  <th className="table-heading">End Time</th>
-                  <th className="table-heading">Location</th>
-                  <th className="table-heading">Actions</th>
+    <DashboardLayout title="My Appointments" subtitle="Manage your scheduled appointments">
+      <div className="table-container fade-in">
+        {loading ? (
+          <div className="loading-spinner"></div>
+        ) : appointments.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon"><FiCalendar /></div>
+            <h3>No Appointments Yet</h3>
+            <p>You haven't scheduled any appointments.</p>
+          </div>
+        ) : (
+          <table className="modern-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Location</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {appointments.map((appointment) => (
+                <tr key={appointment._id}>
+                  <td>
+                    {editAppointment && editAppointment._id === appointment._id ? (
+                      <input
+                        type="date"
+                        className="edit-input"
+                        value={editAppointment.date}
+                        onChange={(e) => handleInputChange(e, "date")}
+                      />
+                    ) : (
+                      <div className="td-content">
+                        <FiCalendar className="td-icon" />
+                        {new Date(appointment.date).toLocaleDateString()}
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    {editAppointment && editAppointment._id === appointment._id ? (
+                      <input
+                        type="time"
+                        className="edit-input"
+                        value={editAppointment.startTime}
+                        onChange={(e) => handleInputChange(e, "startTime")}
+                      />
+                    ) : (
+                      <div className="td-content">
+                        <FiClock className="td-icon" />
+                        {appointment.startTime}
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    {editAppointment && editAppointment._id === appointment._id ? (
+                      <input
+                        type="time"
+                        className="edit-input"
+                        value={editAppointment.endTime}
+                        onChange={(e) => handleInputChange(e, "endTime")}
+                      />
+                    ) : (
+                      <div className="td-content">
+                        <FiClock className="td-icon" />
+                        {appointment.endTime}
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    {editAppointment && editAppointment._id === appointment._id ? (
+                      <input
+                        type="text"
+                        className="edit-input"
+                        value={editAppointment.location}
+                        onChange={(e) => handleInputChange(e, "location")}
+                      />
+                    ) : (
+                      <div className="td-content">
+                        <FiMapPin className="td-icon" />
+                        {appointment.location}
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    <div className="action-buttons">
+                      {editAppointment && editAppointment._id === appointment._id ? (
+                        <>
+                          <button className="btn-icon-success" onClick={handleSave} title="Save">
+                            <FiCheck />
+                          </button>
+                          <button className="btn-icon-danger" onClick={handleCancelEdit} title="Cancel">
+                            <FiX />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button className="btn-icon-primary" onClick={() => handleEdit(appointment)} title="Edit">
+                            <FiEdit2 />
+                          </button>
+                          <button className="btn-icon-danger" onClick={() => handleRemoveAppointment(appointment)} title="Delete">
+                            <FiTrash2 />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {appointments.map((appointment) => (
-                  <tr key={appointment._id} className="table-row">
-                    <td className="table-data">
-                      {editAppointment &&
-                      editAppointment._id === appointment._id ? (
-                        <input
-                          type="date"
-                          value={editAppointment.date}
-                          onChange={(e) => handleInputChange(e, "date")}
-                        />
-                      ) : (
-                        appointment.date
-                      )}
-                    </td>
-                    <td className="table-data">
-                      {editAppointment &&
-                      editAppointment._id === appointment._id ? (
-                        <input
-                          type="time"
-                          value={editAppointment.startTime}
-                          onChange={(e) => handleInputChange(e, "startTime")}
-                        />
-                      ) : (
-                        appointment.startTime
-                      )}
-                    </td>
-                    <td className="table-data">
-                      {editAppointment &&
-                      editAppointment._id === appointment._id ? (
-                        <input
-                          type="time"
-                          value={editAppointment.endTime}
-                          onChange={(e) => handleInputChange(e, "endTime")}
-                        />
-                      ) : (
-                        appointment.endTime
-                      )}
-                    </td>
-                    <td className="table-data">
-                      {editAppointment &&
-                      editAppointment._id === appointment._id ? (
-                        <input
-                          type="text"
-                          value={editAppointment.location}
-                          onChange={(e) => handleInputChange(e, "location")}
-                        />
-                      ) : (
-                        appointment.location
-                      )}
-                    </td>
-                    <td className="table-data">
-                      {editAppointment &&
-                      editAppointment._id === appointment._id ? (
-                        <>
-                          <button className="save-btn" onClick={handleSave}>
-                            Save
-                          </button>
-                          <button
-                            className="cancel-btn"
-                            onClick={handleCancelEdit}
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            className="edit-button"
-                            onClick={() => handleEdit(appointment)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="btn-danger"
-                            onClick={() => handleRemoveAppointment(appointment)}
-                          >
-                            Delete
-                          </button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        {/* Confirmation popup */}
-        {showConfirmationPopup && (
-          <div className="confirmation-popup">
-            <h3>Are you sure you want to delete?</h3>
-            <div className="popup-buttons">
-              <button className="popup-button" onClick={handleConfirmDelete}>
-                Yes
-              </button>
-              <button className="popup-button" onClick={handleCancelDelete}>
-                No
-              </button>
-            </div>
-          </div>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
-    </div>
+
+      {showConfirmationPopup && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>Confirm Deletion</h3>
+              <button className="close-btn" onClick={() => setShowConfirmationPopup(false)}><FiX /></button>
+            </div>
+            <div className="modal-body">
+              <p>Are you sure you want to delete this appointment? This action cannot be undone.</p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setShowConfirmationPopup(false)}>Cancel</button>
+              <button className="btn-danger" onClick={handleConfirmDelete}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </DashboardLayout>
   );
 };
 

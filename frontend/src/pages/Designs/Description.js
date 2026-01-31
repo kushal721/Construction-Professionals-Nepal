@@ -1,208 +1,14 @@
-// import React, { useEffect, useState } from "react";
-// import { useParams } from "react-router-dom";
-// import NavbarComp from "../../components/Navbar/Navbar";
-// import FooterComp from "../../components/Footer/Footer";
-// import { useAuthContext } from "../../hooks/useAuthContext";
-// import "./Description.css";
-// import RatingComp from "../../components/Rating/RatingComp";
-// import { toast } from "react-toastify"; // Import toast from react-toastify
-// import "react-toastify/dist/ReactToastify.css";
-
-// const Description = () => {
-//   const { user } = useAuthContext();
-//   const { id } = useParams();
-
-//   const [designDesc, setDesignDesc] = useState(null);
-//   const [addComment, setAddComment] = useState("");
-//   const [showRatingPopup, setShowRatingPopup] = useState(false);
-
-//   useEffect(() => {
-//     const fetchDesign = async () => {
-//       try {
-//         const response = await fetch(`http://localhost:4000/api/designs/${id}`);
-//         if (response.ok) {
-//           const data = await response.json();
-//           setDesignDesc(data);
-//         } else {
-//           console.error("Failed to fetch design");
-//         }
-//       } catch (error) {
-//         console.error("Error fetching design:", error);
-//       }
-//     };
-
-//     fetchDesign();
-//   }, [id]);
-
-//   const addToFavorites = async () => {
-// try {
-//   const response = await fetch(
-//     "http://localhost:4000/api/favorites/addFavorites",
-//     {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${user?.userId}`,
-//       },
-//       body: JSON.stringify({ userId: user?.userId, designId: id }),
-//     }
-//   );
-//   const res = await response.json();
-
-//   if (response.ok) {
-//     toast.success("Design added to favorites!");
-//   } else {
-//     const errorMessage = await response.text();
-//     toast.error(`Failed to add design to favorites: ${errorMessage}`);
-//   }
-// } catch (error) {
-//   console.error("Error adding design to favorites:", error);
-//   toast.error("An error occurred while adding design to favorites");
-// }
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     try {
-//       const response = await fetch(
-//         `http://localhost:4000/api/designs/${id}/comments`,
-//         {
-//           method: "POST",
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${user?.token}`,
-//           },
-//           body: JSON.stringify({
-//             content: addComment,
-//             createdBy: user?.userId,
-//           }),
-//         }
-//       );
-
-//       if (!response.ok) {
-//         throw new Error("Failed to add comment");
-//       }
-
-//       const data = await response.json();
-//       toast.success("Comment added successfully");
-//       setAddComment(""); // Clear the input field after successful comment addition
-//       setDesignDesc({
-//         ...designDesc,
-//         comments: [...designDesc.comments, data],
-//       }); // Add new comment to local state
-//     } catch (error) {
-//       console.error("Error adding comment:", error);
-//       toast.error("An error occurred while adding comment");
-//     }
-//   };
-
-//   return (
-//     <div className="main-container">
-//       <div>
-//         {designDesc ? (
-//           <div className="desc-container">
-//             <div className="left-side">
-//               <div className="design-img">
-//                 {designDesc.designImages.length > 0 && (
-//                   <img
-//                     src={`http://localhost:4000/${designDesc.designImages[0]}`}
-//                     alt="Design"
-//                   />
-//                 )}
-//               </div>
-//             </div>
-//             <div className="right-side">
-// <h2>Name: {designDesc.designName}</h2>
-// <h2>Category: {designDesc.designCategory}</h2>
-// <p>Description: {designDesc.designDescription}</p>
-// <p>Area(Sqm): {designDesc.area}</p>
-// <p>Estimate Cost(Rs): {designDesc.estimateCost}</p>
-// <p className="rating">
-//   Rating(★): {designDesc.averageRating}
-//   <span>({designDesc.totalRatings})</span>
-// </p>
-// <p>Designer: {designDesc.designer_name}</p>
-// <div className="buttons-container">
-//   <button className="fav-btn" onClick={addToFavorites}>
-//     Add to Favorites
-//   </button>
-//   <button
-//     style={{ margin: "5px", background: "orange" }}
-//     onClick={() => setShowRatingPopup(true)}
-//   >
-//     Rate Now
-//   </button>
-//               </div>
-//             </div>
-//           </div>
-//         ) : (
-//           <p>Loading design details...</p>
-//         )}
-//       </div>
-//       <div className="review-section">
-//         <h3>Customer Reviews</h3>
-//         <div className="cmt-main">
-//           <form className="cmt-form" onSubmit={handleSubmit}>
-//             <input
-//               type="text"
-//               id="comment"
-//               name="comment"
-//               value={addComment}
-//               onChange={(e) => setAddComment(e.target.value)}
-//               placeholder="Comment here"
-//             />
-//             <div type="submit" className="btn-addCmt">
-//               <button>Add</button>
-//             </div>
-//           </form>
-//         </div>
-// {designDesc && designDesc.comments && designDesc.comments.length > 0 ? (
-//   designDesc.comments.map((comment) => (
-//     <div key={comment._id} className="review">
-//       <h4>Comment by: {comment.commenterName}</h4>
-//       <p>{comment.content}</p>
-//     </div>
-//   ))
-// ) : (
-//   <p>No comments yet.</p>
-// )}
-//       </div>
-//       <FooterComp />
-// {showRatingPopup && (
-//   <div className="rating-popup">
-//     <div className="rating-popup-content">
-//       <RatingComp
-//         designId={id}
-//         userId={user?.userId}
-//         onClose={() => setShowRatingPopup(false)}
-//       />
-//       <button
-//         className="close-btn"
-//         onClick={() => setShowRatingPopup(false)}
-//       >
-//         ❌
-//       </button>
-//     </div>
-//   </div>
-// )}
-//     </div>
-//   );
-// };
-
-// export default Description;
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-
-import FooterComp from "../../components/Footer/Footer";
-import { useAuthContext } from "../../hooks/useAuthContext";
-import "./Description.css";
-import RatingComp from "../../components/Rating/RatingComp";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { FiHeart, FiMessageSquare, FiStar, FiUser, FiMaximize2, FiMaximize } from "react-icons/fi";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import { toast } from "react-toastify";
+import RatingComp from "../../components/Rating/RatingComp";
+import FooterComp from "../../components/Footer/Footer";
+import { useAuthContext } from "../../hooks/useAuthContext";
+import "./Description.css";
 
 const Description = () => {
   const { user } = useAuthContext();
@@ -210,6 +16,7 @@ const Description = () => {
   const [designDesc, setDesignDesc] = useState(null);
   const [addComment, setAddComment] = useState("");
   const [showRatingPopup, setShowRatingPopup] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDesign = async () => {
@@ -218,11 +25,11 @@ const Description = () => {
         if (response.ok) {
           const data = await response.json();
           setDesignDesc(data);
-        } else {
-          console.error("Failed to fetch design");
         }
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching design:", error);
+        setLoading(false);
       }
     };
 
@@ -230,6 +37,10 @@ const Description = () => {
   }, [id]);
 
   const addToFavorites = async () => {
+    if (!user) {
+      toast.error("Please login to add favorites");
+      return;
+    }
     try {
       const response = await fetch(
         "http://localhost:4000/api/favorites/addFavorites",
@@ -242,22 +53,25 @@ const Description = () => {
           body: JSON.stringify({ userId: user?.userId, designId: id }),
         }
       );
-      const res = await response.json();
 
       if (response.ok) {
         toast.success("Design added to favorites!");
       } else {
         const errorMessage = await response.text();
-        toast.error(`Failed to add design to favorites: ${errorMessage}`);
+        toast.error(`Could not add to favorites: ${errorMessage}`);
       }
     } catch (error) {
       console.error("Error adding design to favorites:", error);
-      toast.error("Design already added to favorites");
+      toast.error("An error occurred");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user) {
+      toast.error("Please login to comment");
+      return;
+    }
 
     try {
       const response = await fetch(
@@ -281,114 +95,174 @@ const Description = () => {
 
       const data = await response.json();
       toast.success("Comment added successfully");
-      setAddComment(""); // Clear the input field after successful comment addition
+      setAddComment("");
       setDesignDesc({
         ...designDesc,
         comments: [...designDesc.comments, data],
-      }); // Add new comment to local state
+      });
     } catch (error) {
       console.error("Error adding comment:", error);
-      toast.error("An error occurred while adding comment");
+      toast.error("Failed to add comment");
     }
   };
 
-  // Settings for the slider
   const sliderSettings = {
     dots: true,
-    infinite: designDesc?.designImages.length > 1,
+    infinite: designDesc?.designImages?.length > 1,
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
-    autoplay: designDesc?.designImages.length > 1,
-    autoplaySpeed: 3000,
-    cssEase: "linear",
+    autoplay: true,
+    autoplaySpeed: 4000,
+    arrows: true,
   };
 
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+      </div>
+    );
+  }
+
+  if (!designDesc) return <div className="error-container">Design not found</div>;
+
   return (
-    <div className="main-container">
-      <div className="desc-container">
-        <div className="left-side">
-          {designDesc?.designImages.length > 0 && (
-            <Slider {...sliderSettings}>
-              {designDesc.designImages.map((image, index) => (
-                <div key={index} className="design-img">
-                  <img
-                    src={`http://localhost:4000/${image}`}
-                    alt="Design"
-                    style={{ width: "100%", objectFit: "contain" }}
-                  />
-                </div>
-              ))}
-            </Slider>
-          )}
-        </div>
-        <div className="right-side">
-          <h2>Name: {designDesc?.designName}</h2>
-          <h2>Category: {designDesc?.designCategory}</h2>
-          <p>Description: {designDesc?.designDescription}</p>
-          <p>Area(Sqm): {designDesc?.area}</p>
-          <p>Estimate Cost(Rs): {designDesc?.estimateCost}</p>
-          <p className="rating">
-            Rating(★): {designDesc?.averageRating}
-            <span>({designDesc?.totalRatings})</span>
-          </p>
-          <p>Designer: {designDesc?.designer_name}</p>
-          <div className="buttons-container">
-            <button className="fav-btn" onClick={addToFavorites}>
-              Add to Favorites
+    <div className="page-wrapper">
+      <div className="description-container">
+
+        {/* Design Header */}
+        <div className="design-header">
+          <div className="design-title-section">
+            <span className="design-category-badge">{designDesc.designCategory}</span>
+            <h1 className="design-title">{designDesc.designName}</h1>
+            <div className="design-meta">
+              <span className="meta-item">
+                <FiUser /> {designDesc.designer_name}
+              </span>
+              <span className="meta-item rating-meta">
+                <FiStar className="star-icon" /> {designDesc.averageRating} ({designDesc.totalRatings} reviews)
+              </span>
+            </div>
+          </div>
+          <div className="design-actions">
+            <button className="action-btn-outline" onClick={addToFavorites}>
+              <FiHeart /> Save
             </button>
-            <button
-              style={{ margin: "5px", background: "orange" }}
-              onClick={() => setShowRatingPopup(true)}
-            >
-              Rate Now
+            <button className="action-btn-primary" onClick={() => setShowRatingPopup(true)}>
+              <FiStar /> Rate Design
             </button>
           </div>
         </div>
-      </div>
-      <div className="review-section">
-        <h3>Customer Reviews</h3>
-        <div className="cmt-main">
-          <form className="cmt-form" onSubmit={handleSubmit}>
-            <input
-              type="text"
-              id="comment"
-              name="comment"
-              value={addComment}
-              onChange={(e) => setAddComment(e.target.value)}
-              placeholder="Comment here"
-            />
-            <button type="submit" className="btn-addCmt">
-              Add
-            </button>
-          </form>
-        </div>
-        {designDesc?.comments && designDesc.comments.length > 0 ? (
-          designDesc.comments.map((comment) => (
-            <div key={comment._id} className="review">
-              <h4>Comment by: {comment.commenterName}</h4>
-              <p>{comment.content}</p>
+
+        {/* Main Content Grid */}
+        <div className="design-content-grid">
+
+          {/* Left Column: Images */}
+          <div className="design-gallery">
+            {designDesc.designImages.length > 0 ? (
+              <div className="slider-wrapper">
+                <Slider {...sliderSettings}>
+                  {designDesc.designImages.map((image, index) => (
+                    <div key={index} className="slide-item">
+                      <img
+                        src={`http://localhost:4000/${image}`}
+                        alt={`Design view ${index + 1}`}
+                      />
+                    </div>
+                  ))}
+                </Slider>
+              </div>
+            ) : (
+              <div className="no-image-placeholder">No images available</div>
+            )}
+          </div>
+
+          {/* Right Column: Details */}
+          <div className="design-info-panel">
+            <div className="info-card">
+              <h3>Project Details</h3>
+              <div className="info-grid">
+                <div className="info-item">
+                  <label>Estimate Cost</label>
+                  <span>Rs. {designDesc.estimateCost}</span>
+                </div>
+                <div className="info-item">
+                  <label>Total Area</label>
+                  <span>{designDesc.area} sq m</span>
+                </div>
+              </div>
             </div>
-          ))
-        ) : (
-          <p>No comments yet.</p>
-        )}
+
+            <div className="info-card description-card">
+              <h3>Description</h3>
+              <p>{designDesc.designDescription}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="reviews-section">
+          <h3>
+            <FiMessageSquare /> Discussion & Reviews ({designDesc.comments?.length || 0})
+          </h3>
+
+          <div className="comment-form-container">
+            <form onSubmit={handleSubmit} className="comment-form">
+              <textarea
+                value={addComment}
+                onChange={(e) => setAddComment(e.target.value)}
+                placeholder="Share your thoughts about this design..."
+                rows="3"
+                required
+              />
+              <button type="submit" className="submit-comment-btn">
+                Post Comment
+              </button>
+            </form>
+          </div>
+
+          <div className="comments-list">
+            {designDesc.comments?.length > 0 ? (
+              designDesc.comments.map((comment) => (
+                <div key={comment._id} className="comment-item">
+                  <div className="comment-avatar">
+                    {comment.commenterName?.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="comment-content">
+                    <div className="comment-header">
+                      <span className="comment-author">{comment.commenterName}</span>
+                      <span className="comment-date">
+                        {new Date(comment.createdAt || Date.now()).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="comment-text">{comment.content}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="no-comments">
+                <p>No comments yet. Be the first to share your thoughts!</p>
+              </div>
+            )}
+          </div>
+        </div>
+
       </div>
       <FooterComp />
+
+      {/* Rating Popup */}
       {showRatingPopup && (
-        <div className="rating-popup">
-          <div className="rating-popup-content">
+        <div className="modal-overlay">
+          <div className="rating-modal">
+            <button className="close-modal-btn" onClick={() => setShowRatingPopup(false)}>
+              &times;
+            </button>
             <RatingComp
               designId={id}
               userId={user?.userId}
               onClose={() => setShowRatingPopup(false)}
             />
-            <button
-              className="close-btn"
-              onClick={() => setShowRatingPopup(false)}
-            >
-              ❌
-            </button>
           </div>
         </div>
       )}

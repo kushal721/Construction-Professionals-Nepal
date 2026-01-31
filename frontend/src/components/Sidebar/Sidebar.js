@@ -1,16 +1,16 @@
-
 import styled from "styled-components";
 import { NavLink as RouterNavLink } from "react-router-dom";
 import {
-  FaBook,
-  FaComments,
-  FaStore,
-  FaTachometerAlt,
-  FaUsers,
-  FaClipboardList,
-  FaUserCog,
-  FaFileAlt,
-} from "react-icons/fa";
+  FiGrid,
+  FiLayers,
+  FiCalendar,
+  FiPlusCircle,
+  FiUser,
+  FiBarChart2,
+  FiUsers,
+  FiFileText,
+  FiClipboard,
+} from "react-icons/fi";
 import { useLogout } from "../../hooks/useLogout";
 import { useAuthContext } from "../../hooks/useAuthContext";
 
@@ -30,142 +30,124 @@ const Sidebar = () => {
   };
 
   return (
-    <StyledDashboard>
+    <StyledSidebar>
+      <SidebarHeader>
+        <SidebarTitle>Dashboard</SidebarTitle>
+      </SidebarHeader>
+
       <SideNav>
         {isProfessional() && (
           <>
             <NavLink to="/dashboard/my-designs">
-              <FaBook /> My Designs
-            </NavLink>
-            <NavLink to="/dashboard/profe-appointments">
-              <FaStore /> Appointments
-            </NavLink>
-            <NavLink to="/dashboard/allappointments">
-              <FaStore /> All Appointments
+              <FiLayers />
+              My Designs
             </NavLink>
             <NavLink to="/dashboard/add-designs">
-              <FaStore /> Add Designs
+              <FiPlusCircle />
+              Add Design
+            </NavLink>
+            <NavLink to="/dashboard/profe-appointments">
+              <FiCalendar />
+              Appointments
+            </NavLink>
+            <NavLink to="/dashboard/allappointments">
+              <FiClipboard />
+              All Appointments
             </NavLink>
             <NavLink to="/dashboard/addAppointment">
-              <FaStore /> Add Appointment
+              <FiPlusCircle />
+              Add Appointment
             </NavLink>
             <NavLink to="/dashboard/profe-profile">
-              <FaStore /> Profile
+              <FiUser />
+              Profile
             </NavLink>
             <NavLink to="/dashboard/professionalsummary">
-              <FaClipboardList /> Summary
+              <FiBarChart2 />
+              Summary
             </NavLink>
           </>
         )}
         {isAdmin() && (
           <>
             <NavLink to="/dashboard/summary">
-              <FaClipboardList /> Summary
+              <FiBarChart2 />
+              Summary
             </NavLink>
             <NavLink to="/dashboard/manageusers">
-              <FaUserCog /> Manage Users
+              <FiUsers />
+              Manage Users
             </NavLink>
-            {/* <NavLink to="/dashboard/managedesigns">
-              <FaUserCog /> Manage Designs
-            </NavLink> */}
             <NavLink to="/dashboard/adminreport">
-              <FaFileAlt /> Report
+              <FiFileText />
+              Report
             </NavLink>
           </>
         )}
       </SideNav>
-    </StyledDashboard>
+    </StyledSidebar>
   );
 };
 
 export default Sidebar;
 
-const StyledDashboard = styled.div`
-  display: flex;
-  height: 88vh;
-`;
-
-const SideNav = styled.nav`
-  border-right: 1px solid #e0e0e0;
-  height: 100%;
-  overflow-y: auto;
-  width: 300px;
+const StyledSidebar = styled.div`
+  width: 260px;
+  min-height: calc(100vh - 80px);
+  background: var(--bg-primary);
+  border-right: 1px solid var(--border-light);
   display: flex;
   flex-direction: column;
-  padding: 1rem;
-  background-color: #f5f5f5;
-
-  @media (max-width: 768px) {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid #e0e0e0;
-  }
 `;
 
 const SidebarHeader = styled.div`
-  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-light);
+`;
 
-  h1 {
-    font-size: 22px;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 0.5rem;
-  }
+const SidebarTitle = styled.h2`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-600);
+  margin: 0;
+`;
 
-  h3 {
-    font-size: 16px;
-    color: #666;
-    margin: 0;
-  }
+const SideNav = styled.nav`
+  flex: 1;
+  padding: 1rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 `;
 
 const NavLink = styled(RouterNavLink)`
-  color: #333;
   display: flex;
   align-items: center;
-  padding: 0.8rem;
-  border-radius: 4px;
-  margin-bottom: 0.5rem;
-  transition: background-color 0.3s;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
 
   &:hover {
-    background-color: #e0e0e0;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
   }
 
   &.active {
-    color: #007bff;
-    background-color: #cfe2ff;
+    background: var(--primary-50);
+    color: var(--primary-700);
+    border-left-color: var(--primary-600);
+    font-weight: 600;
   }
 
   svg {
-    margin-right: 0.5rem;
-  }
-`;
-
-const LogoutContainer = styled.div`
-  margin-top: auto;
-`;
-
-const UserInfo = styled.div`
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-
-  span {
-    font-weight: bold;
-  }
-`;
-
-const LogoutButton = styled.button`
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-
-  &:hover {
-    background-color: #0056b3;
+    font-size: 1.1rem;
+    flex-shrink: 0;
   }
 `;

@@ -1,31 +1,103 @@
 .App {
-  position: relative;
-  overflow-x: clip;
+  min-height: 100vh;
+  background-color: var(--bg-primary);
 }
 
-.App > :nth-child(1) {
-  background: black;
-  position: relative;
+/* Page wrapper for navbar spacing */
+.page-wrapper {
+  padding-top: 80px;
 }
 
-.white-gradient {
-  position: absolute;
-  width: 20rem;
-  height: 20rem;
-  background: rgb(255, 255, 255, 0.522);
-  filter: blur(100px);
-  border-radius: 100px;
+/* Main content area */
+.main-content {
+  min-height: calc(100vh - 80px);
 }
-.maindiv {
+
+/* Dashboard layout */
+.dashboard-layout {
   display: flex;
-  width: 100vw;
-  background-color: rgb(245, 239, 231);
+  min-height: 100vh;
 }
 
-.navbar-comp {
-  height: 5rem;
+.dashboard-content {
+  flex: 1;
+  padding: 2rem;
+  background: var(--bg-secondary);
+}
+
+/* Loading spinner */
+.loading {
   display: flex;
   justify-content: center;
-  flex-direction: column;
-  box-shadow: rgba(255, 255);
+  align-items: center;
+  min-height: 200px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-light);
+  border-top-color: var(--primary-600);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Toast customization */
+.Toastify__toast {
+  border-radius: var(--radius-md) !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+}
+
+.Toastify__toast--success {
+  background: var(--success) !important;
+}
+
+.Toastify__toast--error {
+  background: var(--error) !important;
+}
+
+/* Page header */
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  color: var(--neutral-300);
+  margin-bottom: 1rem;
+}
+
+.empty-state-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-text {
+  color: var(--text-secondary);
 }

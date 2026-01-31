@@ -30,39 +30,39 @@ const Conversation = ({ data, currentUserId, online }) => {
   }, [data, currentUserId]);
 
   return (
-    <>
-      <div className="conversation" style={{ width: "100vh" }}>
-        {userData && (
-          <div className="user-info">
-            {online && <div className="online-dot"> </div>}
-            {/* <div className="relative w-10 h-10 overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600"> */}
-            <svg
-              className="relative w-15 h-12 text-gray-400 -left-2"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                clipRule="evenodd"
-              ></path>
-            </svg>
-
-            <div className="username">
-              <br />
-              <span>{userData.username}</span>
-
-              <br />
-              <span style={{ fontSize: "0.8rem" }}>
-                {online ? "Online" : "Ofline"}
-              </span>
-            </div>
-            <hr style={{ width: "85%", border: "0.1px solid #ececec" }} />
+    <div className="conversation-item">
+      {userData && (
+        <>
+          <div className="conversation-avatar-wrapper">
+            {userData.profile ? (
+              <img
+                src={`http://localhost:4000/${userData.profile}`}
+                alt={userData.username}
+                className="conversation-avatar"
+              />
+            ) : (
+              <div className="conversation-avatar-placeholder">
+                {userData.username.charAt(0).toUpperCase()}
+              </div>
+            )}
+            {online && <div className="online-dot active"></div>}
           </div>
-        )}
-      </div>
-    </>
+
+          <div className="conversation-info">
+            <div className="conversation-top">
+              <h4 className="conversation-name">{userData.username}</h4>
+              <span className="conversation-time">Just now</span>
+            </div>
+            <div className="conversation-meta">
+              <span className={`conversation-status ${online ? "online" : ""}`}>
+                {online ? "Online" : "Offline"}
+              </span>
+              <p className="conversation-preview">Click to see messages</p>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   );
 };
 

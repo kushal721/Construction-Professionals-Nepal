@@ -110,57 +110,110 @@ const Chatbox = ({ chat, currentUser, setSendMessage, receiveMessage }) => {
   }, [messages]);
 
   return (
-    <div className="ChatBox-container">
-      <div>
-        {chat ? (
-          <>
-            <div className="chat-header">
-              {userData && (
-                <div className="cb-user-info">
-                  <div className="user-icon"></div>
-                  <div className="cb-username">
-                    <span className="headertitle">{userData.username}</span>
-                  </div>
+    <div className="chatbox">
+      {chat ? (
+        <>
+          {/* Chatbox Header */}
+          <header className="chatbox-header">
+            {userData ? (
+              <div className="chatbox-header-info">
+                <div className="chatbox-header-avatar-wrapper">
+                  {userData.profile ? (
+                    <img
+                      src={`http://localhost:4000/${userData.profile}`}
+                      alt={userData.username}
+                      className="chatbox-header-avatar"
+                    />
+                  ) : (
+                    <div className="chatbox-header-avatar-placeholder">
+                      {userData.username.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="online-indicator active"></div>
                 </div>
-              )}
-            </div>
-            <hr />
-          </>
-        ) : (
-          <span className="chatbox-empty-message">
-            Tap on a Chat to start Conversation...
-          </span>
-        )}
-      </div>
+                <div className="chatbox-header-text">
+                  <h4 className="chatbox-header-name">{userData.username}</h4>
+                  <p className="chatbox-header-status">Online</p>
+                </div>
+              </div>
+            ) : (
+              <div className="chatbox-header-loading">
+                <div className="spinner-small"></div>
+                <span>Loading user info...</span>
+              </div>
+            )}
+          </header>
 
-      {/* Chatbox messages */}
-      <div className="chat-body">
-        {messages.map((message, index) => (
-          <div
-            ref={scroll}
-            className={
-              message.senderId === currentUser ? "message own" : "message"
-            }
-          >
-            <span>{message.text}</span>
-            <span>{format(message.createdAt)}</span>
+          {/* Chat Messages */}
+          <div className="chatbox-messages">
+            {messages.length > 0 ? (
+              messages.map((message) => {
+                const isOwn = message.senderId === currentUser;
+                return (
+                  <div
+                    key={message._id}
+                    ref={scroll}
+                    className={`message-wrapper ${isOwn ? "own" : "other"}`}
+                  >
+                    {!isOwn && userData && (
+                      <div className="message-avatar-container">
+                        {userData.profile ? (
+                          <img
+                            src={`http://localhost:4000/${userData.profile}`}
+                            alt={userData.username}
+                            className="message-avatar"
+                          />
+                        ) : (
+                          <div className="message-avatar-placeholder">
+                            {userData.username.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div className="message-content">
+                      <p className="message-text">{message.text}</p>
+                      <span className="message-time">{format(message.createdAt)}</span>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="chat-empty-messages">
+                <div className="chat-empty-icon">👋</div>
+                <p>Start a conversation with {userData?.username || "this user"}</p>
+              </div>
+            )}
           </div>
-        ))}
-      </div>
 
-      {/* chat-sender */}
-      <div className="chat-sender">
-        <div></div>
-        <InputEmoji
-          value={newMessage}
-          onChange={handleChange}
-          onKeyPress={handleKeyPress} // Add this line to handle key press
-        />
-        <div className="send-button button" onClick={handleSend}>
-          Send
+          {/* Chat Input */}
+          <div className="chatbox-input-area">
+            <div className="chatbox-input-wrapper">
+              <InputEmoji
+                value={newMessage}
+                onChange={handleChange}
+                onEnter={handleSend}
+                placeholder="Type a message..."
+                fontFamily="Inter, sans-serif"
+                borderColor="transparent"
+                fontSize={15}
+              />
+              <button
+                className="chatbox-send-btn"
+                onClick={handleSend}
+                disabled={!newMessage.trim()}
+              >
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="chatbox-empty">
+          <p>Select a chat to start messaging</p>
         </div>
-        <input type="file" name="" id="" style={{ display: "none" }} />
-      </div>
+      )}
     </div>
   );
 };

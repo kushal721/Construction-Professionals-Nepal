@@ -1,5 +1,4 @@
 
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify"; // Import toast
@@ -9,29 +8,32 @@ export const useSignup = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const signup = async (
-    profile,
+  const signup = async ({
     username,
     email,
-    contactNumber,
     password,
     confirm_password,
-    location,
-    role
-  ) => {
+    role,
+    // Optional fields
+    profile = null,
+    contactNumber = "",
+    location = "",
+  }) => {
     setIsLoading(true);
     setError(null);
 
     try {
       const formData = new FormData();
-      formData.append("profile", profile);
       formData.append("username", username);
       formData.append("email", email);
-      formData.append("contactNumber", contactNumber);
       formData.append("password", password);
       formData.append("confirm_password", confirm_password);
-      formData.append("location", location);
       formData.append("role", role);
+
+      // Append optional fields only if they exist
+      if (profile) formData.append("profile", profile);
+      if (contactNumber) formData.append("contactNumber", contactNumber);
+      if (location) formData.append("location", location);
 
       const response = await fetch(
         `http://localhost:4000/api/user/user-register`,
@@ -45,24 +47,24 @@ export const useSignup = () => {
 
       if (!response.ok) {
         console.log("Signup response:", res.msg);
-        // Use toast.error to show errors
-        toast.error(res.msg);
+        toast.error(res.msg || "Registration failed");
         setError(res.msg);
+        return false; // Return failure
       }
 
       if (response.ok) {
         console.log("Signup response:", res);
-        // Use toast.success for success messages
         toast.success("Registration successful");
         setTimeout(() => {
           navigate("/login");
-        }, 2000); // Navigate after 2 seconds
+        }, 1500);
+        return true; // Return success
       }
     } catch (error) {
       console.error("Signup Error:", error.message);
-      // Use toast.error to show errors
       toast.error(error.message);
       setError(error.message);
+      return false;
     } finally {
       setIsLoading(false);
     }

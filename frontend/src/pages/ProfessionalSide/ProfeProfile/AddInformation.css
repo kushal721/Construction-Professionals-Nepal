@@ -1,62 +1,87 @@
+/* ========================================
+   ADD INFORMATION MODAL - Modern Layout
+   ======================================== */
+
 .add-info-container {
-  max-width: 800px;
-  margin: 50px auto;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  color: var(--text-primary);
 }
 
-.section-title {
-  font-size: 24px;
-  margin-bottom: 20px;
+.add-info-container .section-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-light);
 }
 
-.form {
-  margin-top: 40px;
+.add-info-container .form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.left-form-group,
+.right-form-group {
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  justify-content: space-evenly;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-.form-group {
-  margin-bottom: 20px;
+.add-info-container .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.label {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 5px;
+.add-info-container .label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
-.input-field {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+.add-info-container .input-field {
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
 }
 
-.submit-btn {
-  display: block;
-  width: 100%;
-  padding: 10px;
-  background-color: #007bff;
-  color: #fff;
+.add-info-container .input-field:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  background: var(--bg-primary);
+}
+
+.add-info-container textarea.input-field {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.add-info-container .submit-btn {
+  grid-column: 1 / -1;
+  margin-top: 1rem;
+  padding: 0.875rem;
+  background: var(--primary-600);
+  color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background var(--transition-fast);
 }
 
-.submit-btn:hover {
-  background-color: #0056b3;
+.add-info-container .submit-btn:hover {
+  background: var(--primary-700);
 }
 
-/* Adjust layout for smaller screens */
-@media (max-width: 768px) {
-  .form {
-    flex-direction: column;
+@media (max-width: 600px) {
+  .add-info-container .form {
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
 }

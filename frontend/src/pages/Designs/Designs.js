@@ -1,22 +1,21 @@
 import React, { useState, useEffect } from "react";
-
-import FooterComp from "../../components/Footer/Footer";
-
-import { sortBy } from "lodash";
+import { Link } from "react-router-dom";
+import { FiSearch, FiFilter, FiGrid, FiChevronDown, FiX } from "react-icons/fi";
 import { Pagination } from "@mui/material";
+import { sortBy } from "lodash";
 import DesignCard from "../../components/Cards/DesignCard";
+import FooterComp from "../../components/Footer/Footer";
+import "./Designs.css";
 
 const Designs = () => {
   const [designs, setDesigns] = useState([]);
-  const [sortedDesigns, setSortedDesigns] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [sortByOption, setSortByOption] = useState("designName");
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredDesigns, setFilteredDesigns] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [designsPerPage] = useState(6);
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [minEstimatedCost, setMinEstimatedCost] = useState("");
-  const [maxEstimatedCost, setMaxEstimatedCost] = useState("");
+  const [designsPerPage] = useState(9);
+  const [showFilters, setShowFilters] = useState(false);
   const [minArea, setMinArea] = useState("");
   const [maxArea, setMaxArea] = useState("");
 
@@ -29,8 +28,10 @@ const Designs = () => {
         }
         const data = await response.json();
         setDesigns(data);
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching designs:", error.message);
+        setLoading(false);
       }
     };
 
@@ -38,158 +39,173 @@ const Designs = () => {
   }, []);
 
   useEffect(() => {
-    const sorted = sortBy(designs, sortByOption);
-    setSortedDesigns(sorted);
-  }, [designs, sortByOption]);
-
-  useEffect(() => {
-    let filtered = sortedDesigns.filter((design) =>
+    let filtered = designs.filter((design) =>
       design.designName.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    if (selectedCategory !== "") {
-      filtered = filtered.filter(
-        (design) => design.category === selectedCategory
-      );
-    }
-    if (minEstimatedCost !== "" && maxEstimatedCost !== "") {
-      filtered = filtered.filter(
-        (design) =>
-          design.estimatedCost >= parseInt(minEstimatedCost) &&
-          design.estimatedCost <= parseInt(maxEstimatedCost)
-      );
-    }
-    if (minArea !== "" && maxArea !== "") {
+
+    if (minArea && maxArea) {
       filtered = filtered.filter(
         (design) =>
           design.area >= parseInt(minArea) && design.area <= parseInt(maxArea)
       );
     }
-    setFilteredDesigns(filtered);
-  }, [
-    sortedDesigns,
-    searchTerm,
-    selectedCategory,
-    minEstimatedCost,
-    maxEstimatedCost,
-    minArea,
-    maxArea,
-  ]);
+
+    const sorted = sortBy(filtered, sortByOption);
+    setFilteredDesigns(sorted);
+  }, [designs, searchTerm, sortByOption, minArea, maxArea]);
 
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const indexOfLastDesign = currentPage * designsPerPage;
   const indexOfFirstDesign = indexOfLastDesign - designsPerPage;
-  const currentDesigns = filteredDesigns.slice(
-    indexOfFirstDesign,
-    indexOfLastDesign
-  );
+  const currentDesigns = filteredDesigns.slice(indexOfFirstDesign, indexOfLastDesign);
 
-  // Function to sort designs based on multiple criteria
-  const sortDesigns = (designs) => {
-    switch (sortByOption) {
-      case "designName":
-        return sortBy(designs, "designName");
-      case "authorName":
-        return sortBy(designs, "authorName");
-      case "category":
-        return sortBy(designs, "category");
-      case "estimatedCost":
-        return sortBy(designs, (design) => parseFloat(design.estimatedCost));
-      case "area":
-        return sortBy(designs, (design) => parseFloat(design.area));
-      default:
-        return designs;
-    }
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSortByOption("designName");
+    setMinArea("");
+    setMaxArea("");
   };
 
-  return (
-    <div>
-      <div className="flex">
-        <nav className="w-1000 md:w-1/4 bg-light p-4 rounded-lg shadow-md">
-          <h2 className="text-lg font-semibold mb-4 text-dark">Explore</h2>
-
-          <div className="mb-4">
-            <label
-              htmlFor="sortBy"
-              className="form-label text-sm font-medium text-dark mb-1"
-            >
-              Sort By
-            </label>
-            <select
-              id="sortBy"
-              className="form-select p-2 border rounded bg-white focus:outline-none focus:ring-2 focus:ring-primary"
-              value={sortByOption}
-              onChange={(e) => setSortByOption(e.target.value)}
-            >
-              <option value="designName">Design Name</option>
-              <option value="authorName">Author Name</option>
-            </select>
-          </div>
-          <div className="mb-4">
-            <input
-              type="text"
-              className="form-control p-2 border rounded"
-              placeholder="Search designs"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          <div className="mb-4">
-            <label
-              htmlFor="minArea"
-              className="form-label text-sm font-medium text-dark mb-1"
-            >
-              Min Area
-            </label>
-            <input
-              type="number"
-              id="minArea"
-              className="form-control p-2 border rounded"
-              placeholder="Min Area"
-              value={minArea}
-              onChange={(e) => setMinArea(e.target.value)}
-            />
-          </div>
-          <div className="mb-4">
-            <label
-              htmlFor="maxArea"
-              className="form-label text-sm font-medium text-dark mb-1"
-            >
-              Max Area
-            </label>
-            <input
-              type="number"
-              id="maxArea"
-              className="form-control p-2 border rounded"
-              placeholder="Max Area"
-              value={maxArea}
-              onChange={(e) => setMaxArea(e.target.value)}
-            />
-          </div>
-        </nav>
-
-        <div className="w-full md:w-3/4 p-4">
-          <h2 className="text-2xl font-bold mb-4 text-blue-800">Designs</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sortDesigns(currentDesigns).map((design) => (
-              <DesignCard key={design._id} design={design} />
-            ))}
-          </div>
-          <div className="flex justify-center mt-4">
-            <Pagination
-              count={Math.ceil(filteredDesigns.length / designsPerPage)}
-              page={currentPage}
-              onChange={handlePageChange}
-              showFirstButton
-              showLastButton
-              color="primary"
-            />
-          </div>
+  if (loading) {
+    return (
+      <div className="designs-page">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Loading designs...</p>
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="designs-page">
+      {/* Hero Banner */}
+      <section className="designs-hero">
+        <div className="designs-hero-content">
+          <h1 className="designs-hero-title">Explore Our Designs</h1>
+          <p className="designs-hero-subtitle">
+            Discover stunning architectural designs for your dream home
+          </p>
+
+          {/* Search Bar */}
+          <div className="hero-search">
+            <FiSearch className="hero-search-icon" />
+            <input
+              type="text"
+              placeholder="Search designs by name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="hero-search-input"
+            />
+            {searchTerm && (
+              <button className="hero-search-clear" onClick={() => setSearchTerm("")}>
+                <FiX />
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Main Content */}
+      <section className="designs-main">
+        <div className="designs-container">
+          {/* Toolbar */}
+          <div className="designs-toolbar">
+            <div className="toolbar-left">
+              <span className="result-count">
+                {filteredDesigns.length} designs found
+              </span>
+            </div>
+            <div className="toolbar-right">
+              <button
+                className={`filter-toggle-btn ${showFilters ? 'active' : ''}`}
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <FiFilter />
+                Filters
+              </button>
+              <div className="sort-dropdown">
+                <label>Sort by:</label>
+                <select
+                  value={sortByOption}
+                  onChange={(e) => setSortByOption(e.target.value)}
+                >
+                  <option value="designName">Name</option>
+                  <option value="estimatedCost">Price</option>
+                  <option value="area">Area</option>
+                  <option value="averageRating">Rating</option>
+                </select>
+                <FiChevronDown className="dropdown-icon" />
+              </div>
+            </div>
+          </div>
+
+          {/* Filters Panel */}
+          {showFilters && (
+            <div className="filters-panel">
+              <div className="filter-group">
+                <label>Min Area (sqm)</label>
+                <input
+                  type="number"
+                  placeholder="0"
+                  value={minArea}
+                  onChange={(e) => setMinArea(e.target.value)}
+                />
+              </div>
+              <div className="filter-group">
+                <label>Max Area (sqm)</label>
+                <input
+                  type="number"
+                  placeholder="1000"
+                  value={maxArea}
+                  onChange={(e) => setMaxArea(e.target.value)}
+                />
+              </div>
+              <button className="clear-filters-btn" onClick={clearFilters}>
+                Clear Filters
+              </button>
+            </div>
+          )}
+
+          {/* Designs Grid */}
+          {currentDesigns.length > 0 ? (
+            <>
+              <div className="designs-grid">
+                {currentDesigns.map((design) => (
+                  <DesignCard key={design._id} design={design} />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              <div className="pagination-container">
+                <Pagination
+                  count={Math.ceil(filteredDesigns.length / designsPerPage)}
+                  page={currentPage}
+                  onChange={handlePageChange}
+                  showFirstButton
+                  showLastButton
+                  color="primary"
+                  size="large"
+                />
+              </div>
+            </>
+          ) : (
+            <div className="no-results">
+              <div className="no-results-icon">🏠</div>
+              <h3>No designs found</h3>
+              <p>Try adjusting your search or filters</p>
+              <button className="btn-primary" onClick={clearFilters}>
+                Clear Filters
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+
       <FooterComp />
     </div>
   );

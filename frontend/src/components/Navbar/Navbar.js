@@ -1,20 +1,32 @@
 import { useNavigate, NavLink, Link } from "react-router-dom";
-import { Button, Dropdown, Navbar } from "flowbite-react";
 import { useLogout } from "../../hooks/useLogout";
 import { useAuthContext } from "../../hooks/useAuthContext";
 import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
-import { BiReset } from "react-icons/bi";
+import { FiChevronDown, FiUser, FiSettings, FiLogOut, FiGrid, FiX } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import EditProfile from "../../pages/ProfessionalSide/ProfeProfile/EditProfile";
+import ChangePasswordComp from "../../components/ChangePassword/ChangePassword"; // Rename import to avoid conflict if any, or just clarity
+import "./navbar.css";
 
 function NavbarComp() {
   const { logout } = useLogout();
   const { user } = useAuthContext();
   const Navigate = useNavigate();
   const [showEditProfilePopup, setShowEditProfilePopup] = useState(false);
+  const [showChangePasswordPopup, setShowChangePasswordPopup] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   const [userData, setUserData] = useState({});
-  console.log("fed", userData);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -41,196 +53,184 @@ function NavbarComp() {
     Navigate("/");
   };
 
-  const isClient = () => {
-    return user && user.role === "client";
-  };
-  const isProfessional = () => {
-    return user && user.role === "professional";
-  };
+  const isClient = () => user && user.role === "client";
+  const isProfessional = () => user && user.role === "professional";
+  const isAdmin = () => user && user.role === "admin";
 
   return (
-    <Navbar
-      fluid
-      rounded
-      className="navbar-container"
-      style={{ backgroundColor: "#313438" }}
-    >
-      <Navbar.Brand as={NavLink} to="/" className="text-center">
-        <span
-          className="self-center text-2xl font-semibold "
-          style={{ color: "white" }}
-        >
-          Construction Professionals Nepal
-        </span>
-      </Navbar.Brand>
+    <>
+      <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
+        <div className="navbar-container">
+          {/* Brand */}
+          <Link to="/" className="navbar-brand">
+            <div className="navbar-logo">CP</div>
+            <span className="navbar-brand-text">
+              Construction<span>Pro</span>
+            </span>
+          </Link>
 
-      <div className="flex md:order-2">
-        {user && (
-          <>
-            <Dropdown
-              style={{ height: "60px", width: "13rem" }}
-              label={
-                <>
-                  {userData?.profile?.length > 0 ? (
-                    <img
-                      src={`http://localhost:4000/${userData?.profile}`}
-                      alt="Profile Picture"
-                      className="profile-img"
-                      style={{
-                        height: "55px",
-                        width: "55px",
-                        // height: "10px",
-                        objectFit: "cover",
-                        borderRadius: "50%",
-                      }}
-                    />
-                  ) : (
-                    <img
-                      src="./profile.png"
-                      alt="Profile Picture"
-                      className="profile-img"
-                      style={{
-                        width: "55px",
-                        height: "55px",
-                        objectFit: "cover",
-                        borderRadius: "50%",
-                      }}
-                    />
-                  )}
-                  &nbsp;&nbsp;
-                  <span>{userData?.username}</span>
-                </>
-              }
-            >
-              <Dropdown.Header>
-                <span className="block text-sm">{userData?.username}</span>
-                <span className="block truncate text-sm font-medium">
-                  {userData?.email}
-                </span>
-              </Dropdown.Header>
-
-              <button
-                className="action-button"
-                onClick={() => setShowEditProfilePopup(true)} // Show the Edit Profile popup when clicked
-              >
-                Edit Profile
-              </button>
-              <Dropdown.Divider />
-              <Link to="/changepassword" className="reset-password-link">
-                <button className="action-button">Change Password</button>
-              </Link>
-              {user && (
-                <div>
-                  <Button
-                    style={{ backgroundColor: "blue", margin: "8px 0 0 10px" }}
-                    onClick={handleClick}
-                  >
-                    Logout
-                  </Button>
-                </div>
-              )}
-            </Dropdown>
-            &nbsp;&nbsp;&nbsp;&nbsp;
-          </>
-        )}
-        &nbsp;
-        {!user && (
-          <NavLink to="/login">
-            <Button style={{ backgroundColor: "blue" }}>Login</Button>
-          </NavLink>
-        )}
-        <Navbar.Toggle />
-      </div>
-      <Navbar.Collapse>
-        <Navbar.Link as={NavLink} to="/" exact="true">
-          <span className="text-lg " style={{ color: "white" }}>
-            Home
-          </span>
-        </Navbar.Link>
-        <Navbar.Link as={NavLink} to="/designs">
-          <span className="text-lg" style={{ color: "white" }}>
-            Designs
-          </span>
-        </Navbar.Link>
-        <Navbar.Link as={NavLink} to="/professionals">
-          <span className="text-lg" style={{ color: "white" }}>
-            Professionals
-          </span>
-        </Navbar.Link>
-        <Navbar.Link as={NavLink} to="/contact">
-          <span className="text-lg" style={{ color: "white" }}>
-            Contact Us
-          </span>
-        </Navbar.Link>
-        {isClient() && (
-          <Navbar.Link as={NavLink} to="/favorite">
-            <span className="text-lg" style={{ color: "white" }}>
-              Favorite
-            </span>
-          </Navbar.Link>
-        )}
-        {isProfessional() && (
-          <Navbar.Link as={NavLink} to="/favorite">
-            <span className="text-lg" style={{ color: "white" }}>
-              Favorite
-            </span>
-          </Navbar.Link>
-        )}
-        {isClient() && (
-          <Navbar.Link as={NavLink} to="/appointment">
-            <span className="text-lg" style={{ color: "white" }}>
-              Appointments
-            </span>
-          </Navbar.Link>
-        )}
-        {user && (
-          <>
-            <NavLink to="/chat">
-              <IoChatbubbleEllipsesOutline
-                style={{
-                  fontSize: "24px",
-                  fontWeight: "bold",
-                  color: "white",
-                  marginLeft: "8px",
-                }}
-              />
+          {/* Navigation Links */}
+          <div className={`navbar-nav ${mobileMenuOpen ? 'open' : ''}`}>
+            <NavLink to="/" className={({ isActive }) => `navbar-link ${isActive ? 'active' : ''}`}>
+              Home
             </NavLink>
-            {!isClient() && (
+            <NavLink to="/designs" className={({ isActive }) => `navbar-link ${isActive ? 'active' : ''}`}>
+              Designs
+            </NavLink>
+            <NavLink to="/professionals" className={({ isActive }) => `navbar-link ${isActive ? 'active' : ''}`}>
+              Professionals
+            </NavLink>
+            <NavLink to="/contact" className={({ isActive }) => `navbar-link ${isActive ? 'active' : ''}`}>
+              Contact
+            </NavLink>
+            {isClient() && (
               <>
-                {user.role === "admin" && (
-                  <NavLink to="/dashboard/summary">
-                    <span className="text-lg" style={{ color: "white" }}>
-                      Dashboard
-                    </span>
-                  </NavLink>
-                )}
-
-                {user.role === "professional" && (
-                  <NavLink to="/dashboard/my-designs">
-                    <span className="text-lg" style={{ color: "white" }}>
-                      Dashboard
-                    </span>
-                  </NavLink>
-                )}
+                <NavLink to="/favorite" className={({ isActive }) => `navbar-link ${isActive ? 'active' : ''}`}>
+                  Favorites
+                </NavLink>
+                <NavLink to="/appointment" className={({ isActive }) => `navbar-link ${isActive ? 'active' : ''}`}>
+                  Appointments
+                </NavLink>
               </>
             )}
-          </>
-        )}
+            {isProfessional() && (
+              <NavLink to="/favorite" className={({ isActive }) => `navbar-link ${isActive ? 'active' : ''}`}>
+                Favorites
+              </NavLink>
+            )}
+          </div>
 
-        {/* Edit Profile Popup */}
-        {showEditProfilePopup && (
-          <div className="edit-profile-popup">
-            <EditProfile />
+          {/* Actions */}
+          <div className="navbar-actions">
+            {user && (
+              <>
+                {/* Chat Icon */}
+                <Link to="/chat" className="navbar-icon-btn">
+                  <IoChatbubbleEllipsesOutline />
+                </Link>
+
+                {/* Dashboard Link */}
+                {!isClient() && (
+                  <Link
+                    to={isAdmin() ? "/dashboard/summary" : "/dashboard/my-designs"}
+                    className="navbar-dashboard-link"
+                  >
+                    <FiGrid />
+                    Dashboard
+                  </Link>
+                )}
+
+                {/* Profile Dropdown */}
+                <div className={`navbar-profile ${dropdownOpen ? 'open' : ''}`}>
+                  <button
+                    className="navbar-profile-trigger"
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                  >
+                    {userData?.profile?.length > 0 ? (
+                      <img
+                        src={`http://localhost:4000/${userData?.profile}`}
+                        alt="Profile"
+                        className="navbar-profile-avatar"
+                      />
+                    ) : (
+                      <img
+                        src="./profile.png"
+                        alt="Profile"
+                        className="navbar-profile-avatar"
+                      />
+                    )}
+                    <span className="navbar-profile-name">{userData?.username}</span>
+                    <FiChevronDown className="navbar-profile-chevron" />
+                  </button>
+
+                  <div className="navbar-dropdown">
+                    <div className="navbar-dropdown-header">
+                      <div className="navbar-dropdown-name">{userData?.username}</div>
+                      <div className="navbar-dropdown-email">{userData?.email}</div>
+                    </div>
+
+                    <button
+                      className="navbar-dropdown-item"
+                      onClick={() => {
+                        setShowEditProfilePopup(true);
+                        setDropdownOpen(false);
+                      }}
+                    >
+                      <FiUser />
+                      Edit Profile
+                    </button>
+
+                    <button
+                      className="navbar-dropdown-item"
+                      onClick={() => {
+                        setShowChangePasswordPopup(true);
+                        setDropdownOpen(false);
+                      }}
+                    >
+                      <FiSettings />
+                      Change Password
+                    </button>
+
+                    <div className="navbar-dropdown-divider"></div>
+
+                    <button className="navbar-dropdown-item danger" onClick={handleClick}>
+                      <FiLogOut />
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {!user && (
+              <Link to="/login" className="navbar-login-btn">
+                Login
+              </Link>
+            )}
+
+            {/* Mobile Menu Toggle */}
             <button
-              className="close-popup-btn"
-              onClick={() => setShowEditProfilePopup(false)} // Hide the Edit Profile popup when clicked
+              className="navbar-toggle"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              ❌
+              <span></span>
+              <span></span>
+              <span></span>
             </button>
           </div>
-        )}
-      </Navbar.Collapse>
-    </Navbar>
+        </div>
+      </nav>
+
+      {/* Edit Profile Popup */}
+      {showEditProfilePopup && (
+        <div className="profile-popup-overlay" onClick={() => setShowEditProfilePopup(false)}>
+          <div className="profile-popup-content" onClick={(e) => e.stopPropagation()}>
+            <EditProfile onClose={() => setShowEditProfilePopup(false)} />
+            <button
+              className="profile-popup-close"
+              onClick={() => setShowEditProfilePopup(false)}
+            >
+              <FiX />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Change Password Popup */}
+      {showChangePasswordPopup && (
+        <div className="profile-popup-overlay" onClick={() => setShowChangePasswordPopup(false)}>
+          <div className="profile-popup-content" onClick={(e) => e.stopPropagation()}>
+            <ChangePasswordComp onClose={() => setShowChangePasswordPopup(false)} />
+            <button
+              className="profile-popup-close"
+              onClick={() => setShowChangePasswordPopup(false)}
+            >
+              <FiX />
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

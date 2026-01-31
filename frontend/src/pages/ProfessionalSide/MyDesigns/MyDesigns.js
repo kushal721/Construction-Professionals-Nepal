@@ -1,104 +1,17 @@
-// import React, { useEffect, useState } from "react";
-// import Sidebar from "../../../components/Sidebar/Sidebar";
-// import "./MyDesigns.css"; // Import the CSS for MyDesigns
-// import MyDesignCard from "../../../components/Cards/MyDesignsCard";
-// import { useAuthContext } from "../../../hooks/useAuthContext";
-// import styled from "styled-components";
-
-// const MyDesigns = () => {
-//   const [my_designs, setMy_Designs] = useState([]);
-//   const { user } = useAuthContext();
-//   const [loading, setLoading] = useState(true);
-
-//   console.log("my designs", my_designs);
-//   useEffect(() => {
-//     const fetchDesigns = async () => {
-//       try {
-//         const response = await fetch(
-//           "http://localhost:4000/api/designs/profe/getDesigns",
-//           {
-//             headers: {
-//               Authorization: `Bearer ${user?.token}`,
-//             },
-//           }
-//         );
-//         if (response.ok) {
-//           const data = await response.json();
-//           setMy_Designs(data); // Set designs with fetched data
-//           console.log(data, "data");
-//           setLoading(false);
-//         } else {
-//           console.error("Failed to fetch designs");
-//         }
-//       } catch (error) {
-//         console.error("Error fetching designs:", error);
-//       }
-//     };
-//     if (user?.token) {
-//       fetchDesigns();
-//     }
-//   }, [user]);
-
-//   const handleDelete = (deletedId) => {
-//     setMy_Designs((prevDesigns) =>
-//       prevDesigns.filter((design) => design._id !== deletedId)
-//     );
-//   };
-
-//   if (loading) {
-//     return <Loading>Loading...</Loading>;
-//   }
-
-//   return (
-//     <>
-//       <div className="maindiv">
-//         <div className="sidebar">
-//           <Sidebar />
-//         </div>
-//         <div className="my-designs-container">
-//           <div className="content">
-//             <div className="search-box">
-//               <input type="text" placeholder="Search designs..." />
-//               <button>Search</button>
-//             </div>
-//             <div className="page-name">
-//               <h1 className="page-title">My Designs</h1>
-//             </div>
-//             <div className="designs">
-//               {my_designs.map((my_design) => (
-//                 <div key={my_design._id}>
-//                   <MyDesignCard my_design={my_design} onDelete={handleDelete} />
-//                   {/* <Description design={design} /> */}
-//                 </div>
-//               ))}
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     </>
-//   );
-// };
-
-// const Loading = styled.div`
-//   margin-top: 50px;
-//   text-align: center;
-//   font-size: 100px;
-// `;
-
-// export default MyDesigns;
-
 import React, { useEffect, useState } from "react";
-import Sidebar from "../../../components/Sidebar/Sidebar";
-import "./MyDesigns.css";
+import { Link } from "react-router-dom";
+import { FiPlus, FiSearch, FiGrid, FiList, FiFilter } from "react-icons/fi";
+import DashboardLayout from "../../../components/DashboardLayout/DashboardLayout";
 import MyDesignCard from "../../../components/Cards/MyDesignsCard";
 import { useAuthContext } from "../../../hooks/useAuthContext";
-import styled from "styled-components";
+import "./MyDesigns.css";
 
 const MyDesigns = () => {
   const [myDesigns, setMyDesigns] = useState([]);
   const { user } = useAuthContext();
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [viewMode, setViewMode] = useState("grid");
 
   useEffect(() => {
     const fetchDesigns = async () => {
@@ -117,9 +30,11 @@ const MyDesigns = () => {
           setLoading(false);
         } else {
           console.error("Failed to fetch designs");
+          setLoading(false);
         }
       } catch (error) {
         console.error("Error fetching designs:", error);
+        setLoading(false);
       }
     };
 
@@ -134,11 +49,6 @@ const MyDesigns = () => {
     );
   };
 
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
-  };
-
-  // Filter designs based on search term
   const filteredDesigns = myDesigns.filter(
     (design) =>
       design.designName &&
@@ -146,47 +56,102 @@ const MyDesigns = () => {
   );
 
   if (loading) {
-    return <Loading>Loading...</Loading>;
+    return (
+      <DashboardLayout title="My Designs" subtitle="Manage your design portfolio">
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Loading designs...</p>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   return (
-    <>
-      <div className="maindiv">
-        <div className="sidebar">
-          <Sidebar />
-        </div>
-        <div className="my-designs-container">
-          <div className="content">
-            <div className="search-box">
-              <input
-                type="text"
-                placeholder="Search designs..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-              />
-              <button>Search</button>
-            </div>
-            <div className="page-name">
-              <h1 className="page-title">My Designs</h1>
-            </div>
-            <div className="designs">
-              {filteredDesigns.map((my_design) => (
-                <div key={my_design._id}>
-                  <MyDesignCard my_design={my_design} onDelete={handleDelete} />
-                </div>
-              ))}
-            </div>
+    <DashboardLayout title="My Designs" subtitle="Manage your design portfolio">
+      {/* Action Bar */}
+      <div className="action-bar">
+        <div className="action-bar-left">
+          <div className="search-field">
+            <FiSearch className="search-icon" />
+            <input
+              type="text"
+              placeholder="Search designs..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
           </div>
+          <button className="filter-btn">
+            <FiFilter />
+            Filters
+          </button>
+        </div>
+        <div className="action-bar-right">
+          <div className="view-toggle">
+            <button
+              className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
+              onClick={() => setViewMode('grid')}
+            >
+              <FiGrid />
+            </button>
+            <button
+              className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
+              onClick={() => setViewMode('list')}
+            >
+              <FiList />
+            </button>
+          </div>
+          <Link to="/dashboard/add-designs" className="add-btn">
+            <FiPlus />
+            Add Design
+          </Link>
         </div>
       </div>
-    </>
+
+      {/* Stats Summary */}
+      <div className="stats-row">
+        <div className="stat-card">
+          <div className="stat-value">{myDesigns.length}</div>
+          <div className="stat-label">Total Designs</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-value">
+            {myDesigns.filter(d => d.status === 'active').length || myDesigns.length}
+          </div>
+          <div className="stat-label">Active</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-value">
+            {Math.round(myDesigns.reduce((acc, d) => acc + (d.averageRating || 0), 0) / (myDesigns.length || 1) * 10) / 10}
+          </div>
+          <div className="stat-label">Avg Rating</div>
+        </div>
+      </div>
+
+      {/* Designs Grid */}
+      {filteredDesigns.length > 0 ? (
+        <div className={`designs-grid ${viewMode}`}>
+          {filteredDesigns.map((my_design) => (
+            <MyDesignCard
+              key={my_design._id}
+              my_design={my_design}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="empty-state">
+          <div className="empty-icon">📐</div>
+          <h3>No designs found</h3>
+          <p>Create your first design to get started</p>
+          <Link to="/dashboard/add-designs" className="add-btn">
+            <FiPlus />
+            Add Design
+          </Link>
+        </div>
+      )}
+    </DashboardLayout>
   );
 };
-
-const Loading = styled.div`
-  margin-top: 50px;
-  text-align: center;
-  font-size: 100px;
-`;
 
 export default MyDesigns;

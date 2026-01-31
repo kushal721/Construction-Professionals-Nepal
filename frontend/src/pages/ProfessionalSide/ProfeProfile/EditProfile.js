@@ -1,48 +1,53 @@
 import React, { useState, useEffect } from "react";
+import DashboardLayout from "../../../components/DashboardLayout/DashboardLayout";
 import { useAuthContext } from "../../../hooks/useAuthContext";
 import "./EditProfile.css";
-import { toast } from "react-toastify"; // Import toast
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
+import { FiUser, FiMail, FiPhone, FiBriefcase, FiAward, FiBook, FiSave, FiCamera, FiChevronDown, FiChevronUp } from "react-icons/fi";
 
-const EditProfile = () => {
+const EditProfile = ({ onClose }) => {
   const { user } = useAuthContext();
 
   const [userData, setUserData] = useState({});
   const [professionalsData, setProfessionalsData] = useState({});
   const [showProfessionalsForm, setShowProfessionalsForm] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Fetch user data
-    fetch(`http://localhost:4000/api/userr/${user?.userId}`)
-      .then((response) => response.json())
-      .then((data) => {
-        setUserData(data);
-      })
-      .catch((error) => {
-        console.error("Error fetching user data: ", error);
-      });
-
-    // Fetch professionals data if user is a professional
-    if (user?.isProfessional) {
-      fetch(`http://localhost:4000/api/userr/professionals/${user?.userId}`)
+    if (user?.userId) {
+      fetch(`http://localhost:4000/api/userr/${user?.userId}`)
         .then((response) => response.json())
         .then((data) => {
-          setProfessionalsData(data);
+          setUserData(data);
         })
         .catch((error) => {
-          console.error("Error fetching professionals data: ", error);
+          console.error("Error fetching user data: ", error);
         });
+
+      if (user?.role === "professional") {
+        fetch(`http://localhost:4000/api/userr/professionals/${user?.userId}`)
+          .then((response) => response.json())
+          .then((data) => {
+            setProfessionalsData(data);
+          })
+          .catch((error) => {
+            console.error("Error fetching professionals data: ", error);
+          });
+      }
     }
   }, [user]);
 
   const handleUserEdit = (e) => {
     e.preventDefault();
-    // Update user data on the server
+    setLoading(true);
     const formData = new FormData();
-    formData.append("profile", userData.profile); // Append profile photo
-    formData.append("username", userData.username);
-    formData.append("email", userData.email);
-    formData.append("contactNumber", userData.contactNumber);
+    // Only append if it exists, otherwise backend might receive 'undefined' string
+    if (userData.profile instanceof File) {
+      formData.append("profile", userData.profile);
+    }
+    formData.append("username", userData.username || "");
+    formData.append("email", userData.email || "");
+    formData.append("contactNumber", userData.contactNumber || "");
 
     fetch(`http://localhost:4000/api/userr/${user?.userId}`, {
       method: "PUT",
@@ -53,18 +58,19 @@ const EditProfile = () => {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log("User data updated successfully: ", data);
-        toast.success("User data updated successfully");
+        toast.success("Profile updated successfully");
+        if (onClose) onClose();
       })
       .catch((error) => {
         console.error("Error updating user data: ", error);
-        toast.error("An error occurred while updating user data");
-      });
+        toast.error("An error occurred while updating profile");
+      })
+      .finally(() => setLoading(false));
   };
 
   const handleProfessionalsEdit = (e) => {
     e.preventDefault();
-    // Update professionals data on the server
+    setLoading(true);
     fetch(`http://localhost:4000/api/userr/professionals/${user?.userId}`, {
       method: "PUT",
       headers: {
@@ -75,217 +81,220 @@ const EditProfile = () => {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log("Professionals data updated successfully: ", data);
-        toast.success("Professionals data updated successfully");
+        toast.success("Professional details updated");
+        if (onClose) onClose(); // Optional: close modal on success if desired, or let user continue editing
       })
       .catch((error) => {
         console.error("Error updating professionals data: ", error);
-        toast.error("An error occurred while updating professionals data");
-      });
+        toast.error("An error occurred while updating details");
+      })
+      .finally(() => setLoading(false));
   };
 
   const isProfessional = () => {
     return user && user?.role === "professional";
   };
 
-  return (
-    <div className="edit-profile-container">
-      <h1 className="edit-profile-heading">Edit Profile</h1>
-      <form onSubmit={handleUserEdit} className="edit-profile-form">
-        <div className="form-group">
-          <label htmlFor="profile" className="profile-picture">
-            {userData?.profile?.length > 0 && (
-              <img
-                src={`http://localhost:4000/${userData?.profile}`}
-                alt="Profile Picture"
-                className="profile-img"
-              />
-            )}
-          </label>
-          <input
-            type="file"
-            name="profile"
-            id="profile"
-            accept=".jpeg, .png, .jpg"
-            onChange={(event) =>
-              setUserData({ ...userData, profile: event.target.files[0] })
-            }
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="username" className="form-label">
-            Username:
-          </label>
-          <input
-            type="text"
-            id="username"
-            name="username"
-            value={userData.username || ""}
-            className="form-control"
-            onChange={(event) =>
-              setUserData({ ...userData, username: event.target.value })
-            }
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="email" className="form-label">
-            Email:
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={userData.email || ""}
-            className="form-control"
-            onChange={(event) =>
-              setUserData({ ...userData, email: event.target.value })
-            }
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="email" className="form-label">
-            Phone:
-          </label>
-          <input
-            type="number"
-            id="contactNumber"
-            name="contactNumber"
-            value={userData.contactNumber || ""}
-            className="form-control"
-            onChange={(event) =>
-              setUserData({ ...userData, contactNumber: event.target.value })
-            }
-          />
-        </div>
-        <button type="submit" className="btn btn-primary save-btn">
-          Save Changes
-        </button>
-      </form>
+  const Content = () => (
+    <div className={`edit-profile-container fade-in ${onClose ? 'modal-mode' : ''}`}>
 
+      {/* Personal Details Section */}
+      <section className="profile-section">
+        <div className="section-header">
+          <h3>Personal Information</h3>
+          <p>Manage your public profile details</p>
+        </div>
+
+        <form onSubmit={handleUserEdit} className="modern-form">
+          <div className="profile-upload-container">
+            <label htmlFor="profile" className="profile-picture-wrapper">
+              {userData.profilePreview || (userData?.profile && userData.profile.length > 0 ? (
+                <img
+                  src={userData.profile instanceof File ? URL.createObjectURL(userData.profile) : `http://localhost:4000/${userData?.profile}`}
+                  alt="Profile"
+                  className="profile-img"
+                />
+              ) : (
+                <div className="profile-initial">{userData?.username?.charAt(0) || "U"}</div>
+              ))}
+              <div className="upload-overlay">
+                <FiCamera />
+                <span>Change</span>
+              </div>
+            </label>
+            <input
+              type="file"
+              name="profile"
+              id="profile"
+              accept=".jpeg, .png, .jpg"
+              onChange={(event) => {
+                if (event.target.files[0]) {
+                  setUserData({ ...userData, profile: event.target.files[0] });
+                }
+              }}
+            />
+          </div>
+
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Username</label>
+              <div className="input-wrapper">
+                <FiUser className="input-icon" />
+                <input
+                  type="text"
+                  value={userData.username || ""}
+                  onChange={(e) => setUserData({ ...userData, username: e.target.value })}
+                  className="modern-input"
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Email</label>
+              <div className="input-wrapper">
+                <FiMail className="input-icon" />
+                <input
+                  type="email"
+                  value={userData.email || ""}
+                  onChange={(e) => setUserData({ ...userData, email: e.target.value })}
+                  className="modern-input"
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Contact Number</label>
+              <div className="input-wrapper">
+                <FiPhone className="input-icon" />
+                <input
+                  type="text"
+                  value={userData.contactNumber || ""}
+                  onChange={(e) => setUserData({ ...userData, contactNumber: e.target.value })}
+                  className="modern-input"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="form-actions">
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? <span className="spinner-small"></span> : <FiSave />} Save Changes
+            </button>
+          </div>
+        </form>
+      </section>
+
+      {/* Professional Details Section */}
       {isProfessional() && (
-        <div className="professionals-section mt-4">
-          <button
-            className="btn btn-secondary toggle-btn"
+        <section className="profile-section professional-section">
+          <div
+            className="section-header clickable"
             onClick={() => setShowProfessionalsForm(!showProfessionalsForm)}
           >
-            {showProfessionalsForm
-              ? "Hide Professional Details"
-              : "Edit Professional Details"}
-          </button>
+            <div className="header-text">
+              <h3>Professional Details</h3>
+              <p>Showcase your expertise and experience</p>
+            </div>
+            <button type="button" className="toggle-icon-btn">
+              {showProfessionalsForm ? <FiChevronUp /> : <FiChevronDown />}
+            </button>
+          </div>
+
           {showProfessionalsForm && (
-            <form
-              onSubmit={handleProfessionalsEdit}
-              className="professionals-form"
-            >
-              <div className="row">
-                <div className="leftside">
-                  <div className="col-md-6">
-                    <div className="form-group">
-                      <label htmlFor="specialization" className="form-label">
-                        Specialization:
-                      </label>
-                      <input
-                        type="text"
-                        id="specialization"
-                        name="specialization"
-                        className="form-control"
-                        value={professionalsData.specialization || ""}
-                        onChange={(event) =>
-                          setProfessionalsData({
-                            ...professionalsData,
-                            specialization: event.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="experience" className="form-label">
-                        Experience:
-                      </label>
-                      <input
-                        type="text"
-                        id="experience"
-                        name="experience"
-                        className="form-control"
-                        value={professionalsData.experience || ""}
-                        onChange={(event) =>
-                          setProfessionalsData({
-                            ...professionalsData,
-                            experience: event.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="skills" className="form-label">
-                        Skills:
-                      </label>
-                      <input
-                        type="text"
-                        id="skills"
-                        name="skills"
-                        className="form-control"
-                        value={professionalsData.skills || ""}
-                        onChange={(event) =>
-                          setProfessionalsData({
-                            ...professionalsData,
-                            skills: event.target.value,
-                          })
-                        }
-                      />
-                    </div>
+            <form onSubmit={handleProfessionalsEdit} className="modern-form fade-in">
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Specialization</label>
+                  <div className="input-wrapper">
+                    <FiBriefcase className="input-icon" />
+                    <input
+                      type="text"
+                      value={professionalsData.specialization || ""}
+                      onChange={(e) => setProfessionalsData({ ...professionalsData, specialization: e.target.value })}
+                      className="modern-input"
+                      placeholder="e.g. Architect, Interior Designer"
+                    />
                   </div>
                 </div>
-                <div className="leftside">
-                  <div className="col-md-6">
-                    <div className="form-group">
-                      <label htmlFor="education" className="form-label">
-                        Education:
-                      </label>
-                      <input
-                        type="text"
-                        id="education"
-                        name="education"
-                        className="form-control"
-                        value={professionalsData.education || ""}
-                        onChange={(event) =>
-                          setProfessionalsData({
-                            ...professionalsData,
-                            education: event.target.value,
-                          })
-                        }
-                      />
-                    </div>
 
-                    <div className="form-group">
-                      <label htmlFor="description" className="form-label">
-                        Description:
-                      </label>
-                      <textarea
-                        id="description"
-                        name="description"
-                        rows="4"
-                        className="form-control"
-                        value={professionalsData.description || ""}
-                        onChange={(event) =>
-                          setProfessionalsData({
-                            ...professionalsData,
-                            description: event.target.value,
-                          })
-                        }
-                      ></textarea>
-                    </div>
+                <div className="form-group">
+                  <label>Experience</label>
+                  <div className="input-wrapper">
+                    <FiAward className="input-icon" />
+                    <input
+                      type="text"
+                      value={professionalsData.experience || ""}
+                      onChange={(e) => setProfessionalsData({ ...professionalsData, experience: e.target.value })}
+                      className="modern-input"
+                      placeholder="e.g. 5 years"
+                    />
                   </div>
+                </div>
+
+                <div className="form-group full-width">
+                  <label>Skills</label>
+                  <div className="input-wrapper">
+                    <FiBook className="input-icon" />
+                    <input
+                      type="text"
+                      value={professionalsData.skills || ""}
+                      onChange={(e) => setProfessionalsData({ ...professionalsData, skills: e.target.value })}
+                      className="modern-input"
+                      placeholder="e.g. AutoCAD, 3D Modeling, Project Management"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group full-width">
+                  <label>Education</label>
+                  <div className="input-wrapper">
+                    <FiBook className="input-icon" />
+                    <input
+                      type="text"
+                      value={professionalsData.education || ""}
+                      onChange={(e) => setProfessionalsData({ ...professionalsData, education: e.target.value })}
+                      className="modern-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group full-width">
+                  <label>Description</label>
+                  <textarea
+                    rows="4"
+                    value={professionalsData.description || ""}
+                    onChange={(e) => setProfessionalsData({ ...professionalsData, description: e.target.value })}
+                    className="modern-textarea"
+                    placeholder="Tell us about yourself and your work..."
+                  ></textarea>
                 </div>
               </div>
-              <button type="submit" className="btn btn-primary submit-btn">
-                Save Changes
-              </button>
+
+              <div className="form-actions">
+                <button type="submit" className="btn-primary" disabled={loading}>
+                  {loading ? <span className="spinner-small"></span> : <FiSave />} Update Details
+                </button>
+              </div>
             </form>
           )}
-        </div>
+        </section>
       )}
     </div>
+  );
+
+  if (onClose) {
+    return (
+      <div className="modern-modal-content">
+        <h2 className="modal-title">Edit Profile</h2>
+        <Content />
+      </div>
+    );
+  }
+
+  return (
+    <DashboardLayout title="Edit Profile" subtitle="Update your personal and professional information">
+      <Content />
+    </DashboardLayout>
   );
 };
 

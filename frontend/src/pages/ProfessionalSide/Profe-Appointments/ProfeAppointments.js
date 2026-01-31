@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
-import Sidebar from "../../../components/Sidebar/Sidebar";
-import useAlert from "../../../components/errorAlert"; // Import the useAlert hook
-import "./ProfeAppointments.css";
+import { FiCheck, FiX, FiCalendar, FiClock, FiMapPin, FiMail, FiUser, FiMessageSquare } from "react-icons/fi";
+import DashboardLayout from "../../../components/DashboardLayout/DashboardLayout";
+import useAlert from "../../../components/errorAlert";
 import { useAuthContext } from "../../../hooks/useAuthContext";
-import { toast } from "react-toastify"; // Import toast for notifications
+import { toast } from "react-toastify";
+import "./ProfeAppointments.css";
 
 const ProfeAppointments = () => {
   const [appointmentRequests, setAppointmentRequests] = useState([]);
+  const [activeTab, setActiveTab] = useState("upcoming"); // upcoming, requests, history
+  const [loading, setLoading] = useState(true);
   const { user } = useAuthContext();
-  const { showSuccess, showError } = useAlert(); // Use the useAlert hook
+  const { showSuccess, showError } = useAlert();
 
   useEffect(() => {
     const fetchAppointmentRequests = async () => {
@@ -25,14 +28,12 @@ const ProfeAppointments = () => {
           const data = await response.json();
           if (Array.isArray(data.bookingRequests)) {
             setAppointmentRequests(data.bookingRequests);
-          } else {
-            console.error("Data does not contain booking requests:", data);
           }
-        } else {
-          console.error("Failed to fetch appointment requests");
         }
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching appointment requests:", error);
+        setLoading(false);
       }
     };
     if (user?.token) {
@@ -54,7 +55,6 @@ const ProfeAppointments = () => {
       );
 
       if (response.ok) {
-        // Update appointment status locally
         const updatedAppointments = appointmentRequests.map((appointment) => {
           if (appointment.bookingRequest._id === id) {
             return {
@@ -68,174 +68,167 @@ const ProfeAppointments = () => {
           return appointment;
         });
         setAppointmentRequests(updatedAppointments);
-        // Display success toast
-        toast.success(
-          `Appointment ${
-            action === "confirm" ? "confirmed" : "cancelled"
-          } successfully`
-        );
+        toast.success(`Appointment ${action === "confirm" ? "confirmed" : "cancelled"} successfully`);
       } else {
-        console.error(`Failed to update appointment status (${action})`);
-        // Display error toast
-        toast.error(`Failed to update appointment status (${action})`);
+        toast.error(`Failed to update appointment status`);
       }
     } catch (error) {
-      console.error(`Error updating appointment status (${action}):`, error);
-      // Display error toast
-      toast.error(
-        `Error updating appointment status (${action}): ${error.message}`
-      );
+      toast.error(`Error: ${error.message}`);
     }
   };
 
-  return (
-    <div className="maindiv">
-      <div className="sidebar">
-        <Sidebar />
-      </div>
-      <div className="appointments-container">
-        <div className="content">
-          <div className="page-name">
-            <h1 className="page-title">Confirmed Appointments</h1>
-            <table className="appointment-table">
-              <thead>
-                <tr>
-                  <th className="table-heading">Client Name</th>
-                  <th className="table-heading">Email</th>
-                  <th className="table-heading">Time</th>
-                  <th className="table-heading">Location</th>
-                  <th className="table-heading">Date</th>
-                  <th className="table-heading">Remark</th>
-                  <th className="table-heading">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {appointmentRequests
-                  .filter(
-                    (appointment) =>
-                      appointment.bookingRequest.status === "confirmed"
-                  )
-                  .map((appointment) => (
-                    <tr
-                      key={appointment.bookingRequest._id}
-                      className="table-row"
-                    >
-                      <td className="table-data">
-                        {appointment.clientDetails.username}
-                      </td>
-                      <td className="table-data">
-                        {appointment.clientDetails.email}
-                      </td>
-                      <td className="table-data">
-                        {appointment.bookingRequest?.appointmentTime}
-                      </td>
-                      <td className="table-data">
-                        {appointment.appointmentDetails?.location}
-                      </td>
-                      <td className="table-data">
-                        {appointment.appointmentDetails?.date}
-                      </td>
-                      <td className="table-data">
-                        {appointment.bookingRequest.remark}
-                      </td>
-                      <td className="table-data">
-                        <button
-                          className="reject-button"
-                          onClick={() =>
-                            handleAction(
-                              appointment.bookingRequest._id,
-                              "cancel"
-                            )
-                          }
-                        >
-                          Cancel
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
+  const getFilteredAppointments = () => {
+    switch (activeTab) {
+      case "upcoming":
+        return appointmentRequests.filter(
+          (app) => app.bookingRequest.status === "confirmed"
+        );
+      case "requests":
+        return appointmentRequests.filter(
+          (app) => app.bookingRequest.status === "pending" || app.bookingRequest.status === "Waiting"
+        );
+      case "history":
+        return appointmentRequests.filter(
+          (app) => app.bookingRequest.status === "cancelled" || app.bookingRequest.status === "completed"
+        );
+      default:
+        return [];
+    }
+  };
 
-          <div className="appointment-requests">
-            <h2 className="table-title">Appointment Requests</h2>
-            <table className="appointment-table">
-              <thead>
-                <tr>
-                  <th className="table-heading">Client Name</th>
-                  <th className="table-heading">Email</th>
-                  <th className="table-heading">Time</th>
-                  <th className="table-heading">Location</th>
-                  <th className="table-heading">Date</th>
-                  <th className="table-heading">Status</th>
-                  <th className="table-heading">Remark</th>
-                  <th className="table-heading">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {appointmentRequests
-                  .filter(
-                    (appointment) =>
-                      appointment.bookingRequest.status !== "confirmed"
-                  )
-                  .map((appointment) => (
-                    <tr
-                      key={appointment.bookingRequest._id}
-                      className="table-row"
-                    >
-                      <td className="table-data">
-                        {appointment.clientDetails.username}
-                      </td>
-                      <td className="table-data">
-                        {appointment.clientDetails.email}
-                      </td>
-                      <td className="table-data">
-                        {appointment.bookingRequest.appointmentTime}
-                      </td>
-                      <td className="table-data">
-                        {appointment.appointmentDetails.location}
-                      </td>
-                      <td className="table-data">
-                        {appointment.appointmentDetails.date}
-                      </td>
-                      <td className="table-data">
-                        {appointment.bookingRequest.status}
-                      </td>
-                      <td className="table-data">
-                        {appointment.bookingRequest.remark}
-                      </td>
-                      <td className="table-data">
-                        <button
-                          className="accept-button"
-                          onClick={() =>
-                            handleAction(
-                              appointment.bookingRequest._id,
-                              "confirm"
-                            )
-                          }
-                        >
-                          Accept
-                        </button>
-                        <button
-                          className="reject-button"
-                          onClick={() =>
-                            handleAction(
-                              appointment.bookingRequest._id,
-                              "cancel"
-                            )
-                          }
-                        >
-                          Reject
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
+  const filteredAppointments = getFilteredAppointments();
+
+  if (loading) {
+    return (
+      <DashboardLayout title="Appointments" subtitle="Manage your bookings">
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Loading appointments...</p>
         </div>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout title="Appointments" subtitle="Manage your bookings and requests">
+      {/* Tabs */}
+      <div className="tabs-container">
+        <button
+          className={`tab-btn ${activeTab === 'upcoming' ? 'active' : ''}`}
+          onClick={() => setActiveTab('upcoming')}
+        >
+          Upcoming
+          <span className="count-badge">
+            {appointmentRequests.filter(app => app.bookingRequest.status === 'confirmed').length}
+          </span>
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`}
+          onClick={() => setActiveTab('requests')}
+        >
+          Requests
+          <span className="count-badge warning">
+            {appointmentRequests.filter(app => app.bookingRequest.status === 'pending' || app.bookingRequest.status === 'Waiting').length}
+          </span>
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
+          onClick={() => setActiveTab('history')}
+        >
+          History
+        </button>
       </div>
-    </div>
+
+      {/* Content */}
+      <div className="appointments-list">
+        {filteredAppointments.length > 0 ? (
+          filteredAppointments.map((appointment) => (
+            <div key={appointment.bookingRequest._id} className="appointment-card">
+              <div className="appointment-header">
+                <div className="client-info">
+                  <div className="client-avatar">
+                    <FiUser />
+                  </div>
+                  <div>
+                    <h3 className="client-name">{appointment.clientDetails.username}</h3>
+                    <div className="client-contact">
+                      <FiMail className="icon-small" /> {appointment.clientDetails.email}
+                    </div>
+                  </div>
+                </div>
+                <div className={`status-badge ${appointment.bookingRequest.status.toLowerCase()}`}>
+                  {appointment.bookingRequest.status}
+                </div>
+              </div>
+
+              <div className="appointment-details">
+                <div className="detail-item">
+                  <FiClock className="detail-icon" />
+                  <div>
+                    <span className="label">Time</span>
+                    <span className="value">{appointment.bookingRequest.appointmentTime}</span>
+                  </div>
+                </div>
+                <div className="detail-item">
+                  <FiCalendar className="detail-icon" />
+                  <div>
+                    <span className="label">Date</span>
+                    <span className="value">{appointment.appointmentDetails?.date || 'N/A'}</span>
+                  </div>
+                </div>
+                <div className="detail-item">
+                  <FiMapPin className="detail-icon" />
+                  <div>
+                    <span className="label">Location</span>
+                    <span className="value">{appointment.appointmentDetails?.location || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {appointment.bookingRequest.remark && (
+                <div className="appointment-remark">
+                  <FiMessageSquare className="remark-icon" />
+                  <p>"{appointment.bookingRequest.remark}"</p>
+                </div>
+              )}
+
+              <div className="appointment-actions">
+                {activeTab === 'requests' && (
+                  <>
+                    <button
+                      className="action-btn confirm"
+                      onClick={() => handleAction(appointment.bookingRequest._id, "confirm")}
+                    >
+                      <FiCheck /> Accept
+                    </button>
+                    <button
+                      className="action-btn cancel"
+                      onClick={() => handleAction(appointment.bookingRequest._id, "cancel")}
+                    >
+                      <FiX /> Reject
+                    </button>
+                  </>
+                )}
+                {activeTab === 'upcoming' && (
+                  <button
+                    className="action-btn cancel-outline"
+                    onClick={() => handleAction(appointment.bookingRequest._id, "cancel")}
+                  >
+                    Cancel Appointment
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="empty-state">
+            <div className="empty-icon">📅</div>
+            <h3>No appointments found</h3>
+            <p>You don't have any {activeTab} appointments.</p>
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 };
 

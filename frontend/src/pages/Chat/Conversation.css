@@ -1,7 +1,112 @@
-.user-info {
+/* ========================================
+   CONVERSATION ITEM - Modern Sidebar Component
+   ======================================== */
+
+.conversation-item {
   display: flex;
-  flex-direction: row;
-  margin-left: 10px;
-  font-size: 20px;
   align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0.5rem;
+  width: 100%;
+}
+
+.conversation-avatar-wrapper {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+}
+
+.conversation-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 1.25rem;
+  /* Soft square/rounded avatar */
+  object-fit: cover;
+  border: 2px solid var(--bg-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.conversation-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 1.25rem;
+  background: var(--primary-100);
+  color: var(--primary-700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.online-dot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 14px;
+  height: 14px;
+  background: #cbd5e1;
+  border: 2px solid var(--bg-primary);
+  border-radius: var(--radius-full);
+}
+
+.online-dot.active {
+  background: var(--success);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+.conversation-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.conversation-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.conversation-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  font-family: 'Space Grotesk', sans-serif;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversation-time {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.conversation-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.conversation-status {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.conversation-status.online {
+  color: var(--success);
+}
+
+.conversation-preview {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.8;
 }

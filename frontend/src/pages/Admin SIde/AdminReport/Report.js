@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { FaUsers } from "react-icons/fa";
-import "./Report.css"; // Import CSS for styling
+import { FiUsers, FiDownload, FiFileText } from "react-icons/fi";
 import jsPDF from "jspdf";
-import { Button } from "@mui/material";
-import Sidebar from "../../../components/Sidebar/Sidebar";
+import DashboardLayout from "../../../components/DashboardLayout/DashboardLayout";
+import "./Report.css";
 
 const Report = () => {
   const [designData, setDesignData] = useState([]);
@@ -38,7 +37,7 @@ const Report = () => {
       }
 
       let professionals = designData.filter(
-        (item) => item.professional.role === "professional"
+        (item) => item.professional?.role === "professional"
       );
 
       if (professionals.length === 0) {
@@ -46,23 +45,26 @@ const Report = () => {
         return;
       }
 
-      let report = "Professional Report:\n\n";
+      let report = "CONSTRUCTION PROFESSIONALS NEPAL\n";
+      report += "Professional Performance Report\n";
+      report += `Generated on: ${new Date().toLocaleDateString()}\n`;
+      report += "=================================================\n\n";
 
       professionals.forEach((item, index) => {
-        report += `${index + 1}. Professional Name: ${
-          item.professional.username
-        }\n`;
-        report += `${index + 1}. Email: ${item.professional.email}\n`;
+        report += `${index + 1}. Professional: ${item.professional.username}\n`;
+        report += `   Email: ${item.professional.email}\n`;
+        report += `   Contact: ${item.professional.contactNumber || 'N/A'}\n`;
 
         if (item.designs && item.designs.length > 0) {
-          report += ` - Design Name(Rating) -area(m2)-estimatecost(Rs.):\n`;
+          report += `   Designs Portfolio:\n`;
           item.designs.forEach((design) => {
-            report += `  - ${design.designName}(${design.averageRating}) -${design.area}-${design.estimateCost}\n`;
+            report += `    - ${design.designName} | Rating: ${design.averageRating || 0}/5 | Area: ${design.area}m2 | Cost: Rs.${design.estimateCost}\n`;
           });
-          report += ` - Total Designs: ${item.designs.length}\n\n`;
+          report += `   Total Designs: ${item.designs.length}\n`;
         } else {
-          report += ` - No designs available.\n\n`;
+          report += `   No designs uploaded yet.\n`;
         }
+        report += "\n-------------------------------------------------\n\n";
       });
 
       setReportText(report);
@@ -73,46 +75,78 @@ const Report = () => {
 
   const exportReport = () => {
     const doc = new jsPDF();
-    doc.text(reportText, 10, 10);
-    doc.save("Professional_Report.pdf");
+
+    // Set font size and type
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+
+    // Split text to fit page width
+    const splitText = doc.splitTextToSize(reportText, 180);
+
+    // Add text to document
+    doc.text(splitText, 15, 15);
+
+    doc.save("CPN_Professional_Report.pdf");
   };
 
+  if (loading) {
+    return (
+      <DashboardLayout title="System Reports" subtitle="View and export system reports">
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Generating report data...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
-    <div className="maindiv">
-      <div className="sidebar">
-        <Sidebar />
-      </div>
-      <div className="report-container">
-        <h3 className="report-heading">Professional Report</h3>
-        {loading && <p>Loading...</p>}
-        {error && <p className="error-message">{error}</p>}
-        {!loading && !error && (
-          <div>
-            <Button className="export-button" onClick={exportReport}>
-              Export Report
-            </Button>
+    <DashboardLayout title="System Reports" subtitle="View and export system reports">
+      <div className="report-card">
+        <div className="report-header">
+          <div className="report-title-section">
+            <div className="report-icon">
+              <FiFileText />
+            </div>
+            <div>
+              <h3>Professional Activity Report</h3>
+              <p>Comprehensive overview of professionals and their design portfolios</p>
+            </div>
+          </div>
+          <button className="export-btn" onClick={exportReport}>
+            <FiDownload />
+            Export PDF
+          </button>
+        </div>
+
+        {error ? (
+          <div className="error-state">
+            <p>{error}</p>
+          </div>
+        ) : (
+          <div className="report-preview">
+            <div className="preview-label">Report Preview</div>
             <textarea
               className="report-textarea"
-              rows={10}
-              cols={50}
               readOnly
               value={reportText}
-              style={{ resize: "none" }}
             />
           </div>
         )}
-        <div className="bottom-info-container">
-          <div className="user-count-container">
-            <FaUsers className="users-icon" />
-          </div>
-          <div className="design-count-container">
-            <span className="design-count">
-              Total User: {designData ? designData.length : 0}
-            </span>
+
+        <div className="report-stats">
+          <div className="stat-item">
+            <div className="stat-icon">
+              <FiUsers />
+            </div>
+            <div className="stat-info">
+              <span className="stat-value">{designData ? designData.length : 0}</span>
+              <span className="stat-label">Total Professionals Tracked</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
