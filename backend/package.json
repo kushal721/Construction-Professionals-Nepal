@@ -3,6 +3,7 @@
   "private": true,
   "version": "2.0.0",
   "description": "Construction Professionals Nepal API",
+  "license": "MIT",
   "type": "module",
   "main": "index.js",
   "scripts": {

@@ -11,6 +11,7 @@
 ![Node.js](https://img.shields.io/badge/Node.js-18%2B-5fa04e?logo=nodedotjs&logoColor=white)
 ![MongoDB](https://img.shields.io/badge/MongoDB-7-47a248?logo=mongodb&logoColor=white)
 ![Socket.IO](https://img.shields.io/badge/Socket.IO-4-010101?logo=socketdotio&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-b4441f.svg)](LICENSE)
 
 <img src="docs/screenshots/home.jpg" alt="Home page" width="900" />
 
@@ -27,6 +28,7 @@
 - [API reference](#api-reference)
 - [Testing](#testing)
 - [Security](#security)
+- [License](#license)
 
 ## Features
 
@@ -257,3 +259,7 @@ CI runs the same checks against a MongoDB service container and builds the web a
 - Login and reset responses don't reveal whether an email is registered.
 - Uploads are limited to JPG, PNG and WEBP images up to 5 MB.
 - Secrets live in `.env`, which is git-ignored. Only `.env.example` is committed.
+
+## License
+
+[MIT](LICENSE) © 2025-2026 Kushal Bhatta
