@@ -8,6 +8,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { RealtimeProvider } from "./context/RealtimeContext";
 import { ConfirmProvider } from "./components/ui";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import "./index.css";
 
 const queryClient = new QueryClient({
@@ -27,19 +28,21 @@ function ThemedToaster() {
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <AuthProvider>
-            <RealtimeProvider>
-              <ConfirmProvider>
-                <App />
-                <ThemedToaster />
-              </ConfirmProvider>
-            </RealtimeProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <AuthProvider>
+              <RealtimeProvider>
+                <ConfirmProvider>
+                  <App />
+                  <ThemedToaster />
+                </ConfirmProvider>
+              </RealtimeProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );
