@@ -1,5 +1,12 @@
 {
-  "dependencies": {
-    "react-hot-toast": "^2.4.1"
+  "name": "construction-professionals-nepal",
+  "private": true,
+  "scripts": {
+    "setup": "npm install --prefix backend && npm install --prefix web",
+    "db": "docker compose up -d mongo",
+    "seed": "npm run seed --prefix backend -- --reset",
+    "api": "npm run dev --prefix backend",
+    "web": "npm run dev --prefix web",
+    "build": "npm run build --prefix web"
   }
 }
