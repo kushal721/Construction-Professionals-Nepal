@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --canvas: 250 248 245;
+    --surface: 255 255 255;
+    --muted: 243 239 234;
+    --line: 231 225 217;
+    --ink: 28 25 23;
+    --ink-soft: 87 80 73;
+    --ink-faint: 132 124 116;
+    --brand: 180 68 31;
+    --brand-strong: 143 52 23;
+    --brand-soft: 250 234 226;
+    --brand-ink: 255 255 255;
+    --success: 21 128 61;
+    --success-soft: 220 245 228;
+    --warning: 180 83 9;
+    --warning-soft: 254 240 210;
+    --danger: 190 18 60;
+    --danger-soft: 255 228 233;
+    --info: 29 78 216;
+    --info-soft: 224 234 255;
+    color-scheme: light;
+  }
+
+  .dark {
+    --canvas: 18 16 14;
+    --surface: 27 24 21;
+    --muted: 37 33 29;
+    --line: 54 48 42;
+    --ink: 244 239 233;
+    --ink-soft: 198 189 179;
+    --ink-faint: 150 141 131;
+    --brand: 232 112 72;
+    --brand-strong: 245 140 104;
+    --brand-soft: 60 33 24;
+    --brand-ink: 24 14 10;
+    --success: 74 222 128;
+    --success-soft: 20 50 32;
+    --warning: 251 191 36;
+    --warning-soft: 56 40 12;
+    --danger: 251 113 133;
+    --danger-soft: 64 20 30;
+    --info: 129 160 255;
+    --info-soft: 26 36 66;
+    color-scheme: dark;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-canvas font-sans text-ink;
+  }
+
+  h1, h2, h3 {
+    @apply font-display tracking-tight;
+  }
+
+  ::selection {
+    @apply bg-brand/20;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand/60 ring-offset-2 ring-offset-canvas;
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .field {
+    @apply form-input block w-full rounded-xl border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint
+      transition focus:border-brand focus:ring-2 focus:ring-brand/20 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .card {
+    @apply rounded-2xl border border-line bg-surface shadow-card;
+  }
+
+  .link {
+    @apply font-semibold text-brand underline-offset-4 hover:underline;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+}
