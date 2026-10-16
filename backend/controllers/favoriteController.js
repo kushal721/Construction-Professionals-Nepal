@@ -1,74 +1,35 @@
 import Favorite from "../models/Favorite.js";
 import Design from "../models/Design.js";
-import mongoose from "mongoose";
+import { HttpError, asyncHandler, assertObjectId } from "../utils/http.js";
 
-// Controller to add a favorite
-const addToFavorites = async (req, res) => {
-  try {
-    const { userId, designId } = req.body;
+export const listFavorites = asyncHandler(async (req, res) => {
+  const favorites = await Favorite.find({ userId: req.user._id.toString() }).sort({ createdAt: -1 }).lean();
+  const designs = await Design.find({ _id: { $in: favorites.map((f) => f.designId) } })
+    .select("-comments -ratings")
+    .lean();
+  const byId = new Map(designs.map((d) => [d._id.toString(), d]));
+  // Preserve "most recently saved first" ordering and drop deleted designs.
+  res.json(favorites.map((f) => byId.get(f.designId)).filter(Boolean));
+});
 
-    // Check if the favorite already exists
-    const existingFavorite = await Favorite.findOne({ userId, designId });
-    if (existingFavorite) {
-      return res
-        .status(400)
-        .json({ message: "This item is already in favorites" });
-    }
+export const listFavoriteIds = asyncHandler(async (req, res) => {
+  const favorites = await Favorite.find({ userId: req.user._id.toString() }).select("designId").lean();
+  res.json(favorites.map((f) => f.designId));
+});
 
-    // Create a new favorite
-    const newFavorite = new Favorite({ userId, designId });
-    await newFavorite.save();
+export const addFavorite = asyncHandler(async (req, res) => {
+  const { designId } = req.params;
+  assertObjectId(designId, "Design");
+  if (!(await Design.exists({ _id: designId }))) throw new HttpError(404, "Design not found");
+  await Favorite.updateOne(
+    { userId: req.user._id.toString(), designId },
+    { $setOnInsert: { userId: req.user._id.toString(), designId } },
+    { upsert: true }
+  );
+  res.status(201).json({ message: "Saved to favorites" });
+});
 
-    res.status(201).json({ message: "Item added to favorites successfully" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-
-//controller to get favorites
-const getAllFavorites = async (req, res) => {
-  try {
-    const userId = req.user._id; // Retrieve user ID from the authenticated user
-    console.log("Userrrr ID:", userId);
-
-    const favorites = await Favorite.find({ userId }).populate("designId");
-
-    // Map over favorites and populate design details
-    const favoritesWithDesigns = await Promise.all(
-      favorites.map(async (favorite) => {
-        if (favorite.designId) {
-          const design = await Design.findById(favorite.designId);
-          return {
-            ...favorite.toObject(),
-            design: design ? design.toObject() : null, // Add design details if found, otherwise null
-          };
-        } else {
-          return {
-            ...favorite.toObject(),
-            design: null, // No design found, so set it to null
-          };
-        }
-      })
-    );
-
-    res.json(favoritesWithDesigns);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Controller to remove a favorite
-const removeFromFavorites = async (req, res) => {
-  try {
-    const { userId, designId } = req.body;
-
-    await Favorite.findOneAndDelete({ userId, designId });
-
-    res.json({ message: "Item removed from favorites successfully" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-export { addToFavorites, getAllFavorites, removeFromFavorites };
+export const removeFavorite = asyncHandler(async (req, res) => {
+  await Favorite.deleteOne({ userId: req.user._id.toString(), designId: req.params.designId });
+  res.json({ message: "Removed from favorites" });
+});

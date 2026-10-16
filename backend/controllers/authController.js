@@ -1,249 +1,120 @@
-import UserModel from "../models/User.js";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import transporter from "../config/emailConfig.js";
+import UserModel from "../models/User.js";
+import { sendMail } from "../config/emailConfig.js";
+import { removeUpload } from "../middlewares/upload.js";
+import { HttpError, asyncHandler, requireFields, assertObjectId } from "../utils/http.js";
 
-const strongPasswordRegex = /^.{8,}$/; // Just length for now to debug
+const MIN_PASSWORD = 8;
+const SELF_REGISTER_ROLES = ["client", "professional"];
 
-class UserController {
-  static userRegistration = async (req, res) => {
-    try {
-      const {
-        username,
-        email,
-        contactNumber,
-        password,
-        confirm_password,
-        location,
-        role,
-      } = req.body; // Data from frontend
+const authPayload = (user) => ({
+  token: user.generateToken(),
+  user: user.toJSON(),
+});
 
-      console.log("Registration attempt V3:", email);
+export const register = asyncHandler(async (req, res) => {
+  const uploaded = req.files?.[0]?.path;
+  try {
+    requireFields(req.body, ["username", "email", "password", "role"]);
+    const { username, email, password, contactNumber, location, role } = req.body;
 
-      const userExists = await UserModel.findOne({ email: email });
-      if (userExists) {
-        return res.status(400).json({ msg: "Email already exists" });
-      }
-
-      if (!username || !email || !password || !confirm_password) {
-        return res
-          .status(400)
-          .json({ status: "failed", msg: "All fields are required" });
-      }
-
-      if (password !== confirm_password) {
-        return res.status(400).json({
-          status: "failed",
-          msg: "Password and confirm password do not match",
-        });
-      }
-
-      // Check if password meets strong password criteria
-      // DEBUG MODE: Permissive check
-      if (!strongPasswordRegex.test(password)) {
-        return res.status(400).json({
-          status: "failed",
-          msg: "Password must be at least 8 characters long (DEBUG MODE).",
-        });
-      }
-
-      // Hash the password
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-
-      // Create user
-      const userCreated = await UserModel.create({
-        profile: (req.files && req.files.length > 0 && req.files[0].path) ? req.files[0].path : "",
-        username: username,
-        email: email,
-        contactNumber: contactNumber,
-        password: hashedPassword,
-        location: location,
-        role: role,
-      });
-
-      console.log("Created user:", userCreated);
-
-      return res.status(200).json({
-        msg: "Registration successful",
-        userId: userCreated._id.toString(),
-        token: await userCreated.generateToken(),
-      });
-    } catch (error) {
-      console.error("User Registration Error:", error);
-      return res.status(500).json("Internal server error");
+    if (!SELF_REGISTER_ROLES.includes(role)) {
+      throw new HttpError(400, "Role must be client or professional");
     }
-  };
-
-  //controller for login users
-  static userLogin = async (req, res) => {
-    try {
-      //takes input from frontend in req.body
-      const { email, password } = req.body;
-      if (!email || !password) {
-        return res
-          .status(400)
-          .json({ message: "All fields are required", success: false });
-      }
-      // check if user already exists
-      const userExists = await UserModel.findOne({ email: email });
-      if (!userExists) {
-        return res.status(400).json({
-          message: "No user found. Please register first to login",
-          success: false,
-        });
-      }
-      //check if password match or not
-      const isMatch = await bcrypt.compare(password, userExists.password);
-      if (!isMatch) {
-        return res
-          .status(400)
-          .json({ message: "Email or password is not valid", success: false });
-      }
-
-      res.status(200).json({
-        message: "Login successful",
-        success: true,
-        token: await userExists.generateToken(),
-        userId: userExists._id.toString(),
-        username: userExists.username,
-        email: userExists.email,
-        contactNumber: userExists.contactNumber,
-        location: userExists.location,
-        profile: userExists.profile,
-        role: userExists.role,
-      });
-    } catch (error) {
-      console.error("Error during login:", error);
-      res
-        .status(500)
-        .json({ message: "Internal server error", success: false });
+    if (!/^\S+@\S+\.\S+$/.test(email)) throw new HttpError(400, "Enter a valid email");
+    if (password.length < MIN_PASSWORD) {
+      throw new HttpError(400, `Password must be at least ${MIN_PASSWORD} characters`);
     }
-  };
-
-  // Controller function to change user password
-  static changePassword = async (req, res) => {
-    const { userId, currentPassword, newPassword } = req.body; // Get userId, currentPassword, and newPassword from request body
-    console.log("userid", userId);
-
-    try {
-      // Find the user by their ID
-      const user = await UserModel.findById(userId);
-
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      // Verify the current password
-      const isPasswordValid = await bcrypt.compare(
-        currentPassword,
-        user.password
-      );
-
-      if (!isPasswordValid) {
-        return res
-          .status(400)
-          .json({ message: "Current password is incorrect" });
-      }
-
-      // Hash the new password
-      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-
-      // Update the user's password with the new hashed password
-      user.password = hashedNewPassword;
-      await user.save();
-
-      res.status(200).json({ message: "Password changed successfully" });
-    } catch (error) {
-      console.error("Error changing password:", error);
-      res.status(500).json({ message: "Server Error" });
+    if (await UserModel.exists({ email: email.toLowerCase().trim() })) {
+      throw new HttpError(409, "An account with this email already exists");
     }
-  };
 
-  static loggedUser = async (req, res) => {
-    res.json({ user: req.user });
-  };
+    const user = await UserModel.create({
+      username,
+      email,
+      contactNumber,
+      location,
+      role,
+      password: await bcrypt.hash(password, 10),
+      profile: uploaded || "",
+    });
 
-  // Controller function to send user password reset email
-  static sendUserPasswordResetEmail = async (req, res) => {
-    const { email } = req.body;
-    if (email) {
-      const user = await UserModel.findOne({ email: email });
-      console.log(user);
+    res.status(201).json({ message: "Account created", ...authPayload(user) });
+  } catch (err) {
+    removeUpload(uploaded);
+    throw err;
+  }
+});
 
-      if (user) {
-        const secret = user._id + process.env.JWT_SECRET_KEY;
-        const token = jwt.sign({ userID: user._id }, secret, {
-          expiresIn: "10m",
-        });
-        const link = `http://127.0.0.1:4000/api/user/forgotPassword/${user._id}/${token}`;
-        console.log(link);
+export const login = asyncHandler(async (req, res) => {
+  requireFields(req.body, ["email", "password"]);
+  const user = await UserModel.findOne({ email: req.body.email.toLowerCase().trim() });
+  // Same message for unknown email and wrong password to avoid account enumeration.
+  if (!user || !(await bcrypt.compare(req.body.password, user.password))) {
+    throw new HttpError(401, "Incorrect email or password");
+  }
+  res.json({ message: "Signed in", ...authPayload(user) });
+});
 
-        //Send Email
-        let info = await transporter.sendMail({
-          from: process.env.EMAIL_FROM,
-          to: user.email,
-          subject: "Password Reset Link - Construction Professional's Nepal",
-          html: `<a href =${link}>Click Here </a> to Reset Your Password`,
-        });
+export const me = asyncHandler(async (req, res) => {
+  res.json({ user: req.user });
+});
 
-        res.status(200).send({
-          status: "success",
-          message: "Password Reset Email Sent...  Please Check Your Email",
-          // info: info,
-        });
-      } else {
-        res
-          .status(401)
-          .send({ status: "failed", message: "Email doesn't exists" });
-      }
-    } else {
-      res
-        .status(400)
-        .send({ status: "failed", message: "Email field is required" });
-    }
-  };
+export const changePassword = asyncHandler(async (req, res) => {
+  requireFields(req.body, ["currentPassword", "newPassword"]);
+  const { currentPassword, newPassword } = req.body;
+  const user = await UserModel.findById(req.user._id);
+  if (!(await bcrypt.compare(currentPassword, user.password))) {
+    throw new HttpError(400, "Current password is incorrect");
+  }
+  if (newPassword.length < MIN_PASSWORD) {
+    throw new HttpError(400, `Password must be at least ${MIN_PASSWORD} characters`);
+  }
+  user.password = await bcrypt.hash(newPassword, 10);
+  await user.save();
+  res.json({ message: "Password updated" });
+});
 
-  // controller to reset user password
-  static userPasswordReset = async (req, res) => {
-    console.log("asdfasd");
-    const { password } = req.body;
-    console.log("password", password);
-    const { id, token } = req.params;
-    console.log("id", id);
-    console.log("token", token);
-    const user = await UserModel.findById(id);
-    const new_secret = user._id + process.env.JWT_SECRET_KEY;
-    try {
-      const verifyToken = jwt.verify(token, new_secret);
-      if (password) {
-        const salt = await bcrypt.genSalt(10);
-        const newhashPassword = await bcrypt.hash(password, salt);
+// The reset token is signed with the current password hash, so it becomes
+// invalid as soon as the password changes (single use).
+const resetSecret = (user) => user.password + process.env.JWT_SECRET_KEY;
 
-        await UserModel.findByIdAndUpdate(user._id, {
-          $set: { password: newhashPassword },
-        });
-        res.send({
-          status: "success",
-          message: "password changed successfully",
-        });
-        console.log("password changed successfully");
-      } else {
-        res
-          .status(400)
-          .send({ status: "failed", message: "password required" });
-      }
-    } catch (error) {
-      if (error.name === "TokenExpiredError") {
-        res.status(401).send({ status: "failed", message: "Token expired" });
-      } else {
-        console.log(error);
-        res
-          .status(500)
-          .send({ status: "failed", message: "failed to change pw" });
-      }
-    }
-  };
-}
+export const forgotPassword = asyncHandler(async (req, res) => {
+  requireFields(req.body, ["email"]);
+  const user = await UserModel.findOne({ email: req.body.email.toLowerCase().trim() });
+  if (user) {
+    const token = jwt.sign({ userId: user._id.toString() }, resetSecret(user), {
+      expiresIn: "15m",
+    });
+    const frontend = process.env.REACT_FRONTEND || "http://localhost:5173";
+    const link = `${frontend}/reset-password/${user._id}/${token}`;
+    await sendMail({
+      to: user.email,
+      subject: "Reset your Construction Professionals Nepal password",
+      text: `Reset your password (valid for 15 minutes): ${link}`,
+      html: `<p>Hi ${user.username},</p><p><a href="${link}">Reset your password</a>. This link is valid for 15 minutes.</p><p>If you didn't request this, you can ignore this email.</p>`,
+    });
+  }
+  // Always respond the same way so the endpoint can't be used to probe emails.
+  res.json({ message: "If that email is registered, a reset link is on its way" });
+});
 
-export default UserController;
+export const resetPassword = asyncHandler(async (req, res) => {
+  const { id, token } = req.params;
+  assertObjectId(id, "User");
+  requireFields(req.body, ["password"]);
+  if (req.body.password.length < MIN_PASSWORD) {
+    throw new HttpError(400, `Password must be at least ${MIN_PASSWORD} characters`);
+  }
+  const user = await UserModel.findById(id);
+  if (!user) throw new HttpError(400, "Reset link is invalid");
+  try {
+    jwt.verify(token, resetSecret(user));
+  } catch {
+    throw new HttpError(400, "Reset link is invalid or has expired");
+  }
+  user.password = await bcrypt.hash(req.body.password, 10);
+  await user.save();
+  res.json({ message: "Password reset. You can sign in now." });
+});

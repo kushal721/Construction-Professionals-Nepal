@@ -1,64 +1,44 @@
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 
-//Schema for All users
-const userSchema = new mongoose.Schema({
-  username: {
-    type: String,
-    required: true,
-    trim: true,
+const userSchema = new mongoose.Schema(
+  {
+    username: { type: String, required: true, trim: true },
+    email: { type: String, required: true, trim: true, lowercase: true },
+    password: { type: String, required: true },
+    contactNumber: { type: String, trim: true },
+    location: { type: String, trim: true },
+    role: {
+      type: String,
+      enum: ["client", "professional", "admin"],
+      required: true,
+    },
+    profile: { type: String },
   },
-  email: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  password: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  contactNumber: {
-    type: String,
-  },
-  location: {
-    type: String,
-  },
-  role: {
-    type: String,
-    enum: ["client", "professional", "admin"],
-    required: true,
-  },
-  profile: {
-    type: String,
-  },
-});
-
-//json web token
-userSchema.methods.generateToken = async function () {
-  try {
-    return jwt.sign(
-      {
-        //payload
-        // userId: this._id.toString(),
-        userId: this._id,
-        username: this.username,
-        email: this.email,
-        location: this.location,
-        contactNumber: this.contactNumber,
-        profile: this.profile,
-        role: this.role,
+  {
+    timestamps: true,
+    toJSON: {
+      transform(_doc, ret) {
+        delete ret.password;
+        delete ret.__v;
+        return ret;
       },
-      //signature
-      process.env.JWT_SECRET_KEY,
-      { expiresIn: "5d" }
-    );
-  } catch (error) {
-    console.log(error);
+    },
   }
+);
+
+userSchema.index({ email: 1 });
+
+userSchema.methods.generateToken = function () {
+  return jwt.sign(
+    { userId: this._id.toString(), role: this.role },
+    process.env.JWT_SECRET_KEY,
+    { expiresIn: "7d" }
+  );
 };
 
-//Model
+// Fields that are safe to expose about any user to anyone.
+export const PUBLIC_USER_FIELDS = "username profile location role createdAt";
 
 const UserModel = mongoose.model("user", userSchema);
 

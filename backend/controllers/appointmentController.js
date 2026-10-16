@@ -1,432 +1,193 @@
-// const Appointment = require("../models/appointment");
-import { Appointment } from "../models/Appointment.js";
-import { Booking } from "../models/Appointment.js";
-import User from "../models/User.js";
+import { Appointment, Booking } from "../models/Appointment.js";
+import {
+  HttpError,
+  asyncHandler,
+  assertObjectId,
+  requireFields,
+  isTime,
+  toMinutes,
+} from "../utils/http.js";
 
-import mongoose from "mongoose";
+const ACTIVE = ["pending", "confirmed"];
 
-// Controller to create a new appointment
-const createAppointment = async (req, res) => {
-  try {
-    const { professional, date, startTime, endTime, location } = req.body;
+const startOfToday = () => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
 
-    // Check if all required fields are provided
-    if (!professional || !date || !startTime || !endTime || !location) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-
-    // Create a new appointment instance
-    const appointment = new Appointment({
-      professional,
-      date,
-      startTime,
-      endTime,
-      location,
-    });
-
-    // Save the appointment to the database
-    await appointment.save();
-
-    return res
-      .status(201)
-      .json({ message: "Appointment created successfully", appointment });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
+const validateSlot = ({ date, startTime, endTime }) => {
+  if (Number.isNaN(new Date(date).getTime())) throw new HttpError(400, "Enter a valid date");
+  if (!isTime(startTime) || !isTime(endTime)) throw new HttpError(400, "Times must be in HH:mm format");
+  if (toMinutes(endTime) <= toMinutes(startTime)) {
+    throw new HttpError(400, "End time must be after start time");
   }
 };
 
-// Get all appointments for a professional along with professional details
-const getAppointmentsByProfessional = async (req, res) => {
-  try {
-    const { professional } = req.params;
-    console.log("Professional IdfaD:", professional); // Log professional ID
+// ---------- Availability slots (professional) ----------
 
-    // Assuming the professional data is stored within the User model
-    const user = await User.findById(professional).select("username email");
+export const listMySlots = asyncHandler(async (req, res) => {
+  const slots = await Appointment.find({ professional: req.user._id }).sort({ date: -1, startTime: 1 }).lean();
+  const counts = await Booking.aggregate([
+    { $match: { appointment: { $in: slots.map((s) => s._id) }, status: { $in: ACTIVE } } },
+    { $group: { _id: "$appointment", count: { $sum: 1 } } },
+  ]);
+  const byId = new Map(counts.map((c) => [c._id.toString(), c.count]));
+  res.json(slots.map((s) => ({ ...s, bookingCount: byId.get(s._id.toString()) || 0 })));
+});
 
-    // Check if user exists
-    if (!user) {
-      return res.status(404).json({ message: "Professional not found" });
-    }
+export const listProfessionalSlots = asyncHandler(async (req, res) => {
+  const { professionalId } = req.params;
+  assertObjectId(professionalId, "Professional");
+  const slots = await Appointment.find({
+    professional: professionalId,
+    date: { $gte: startOfToday() },
+  })
+    .sort({ date: 1, startTime: 1 })
+    .lean();
+  const taken = await Booking.find({
+    appointment: { $in: slots.map((s) => s._id) },
+    status: { $in: ACTIVE },
+  })
+    .select("appointment appointmentTime")
+    .lean();
+  res.json(
+    slots.map((s) => ({
+      ...s,
+      bookedTimes: taken.filter((b) => b.appointment.toString() === s._id.toString()).map((b) => b.appointmentTime),
+    }))
+  );
+});
 
-    // Get appointments for the professional
-    const appointments = await Appointment.find({ professional });
-
-    console.log("Appointments:", appointments); // Log appointments
-    console.log("Professional Details:", user); // Log professional details
-
-    res.json({ appointments, professionalDetails: user });
-  } catch (error) {
-    console.error("Error:", error); // Log any errors
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Controller to retrieve all appointments created by the current user
-const getAppointmentById = async (req, res) => {
-  try {
-    if (!req.user || !req.user._id) {
-      return res.status(401).json({ error: "User not authenticated" });
-    }
-
-    const userId = req.user._id;
-    console.log("User ID:", userId);
-
-    const appointments = await Appointment.find({ professional: userId });
-    if (!appointments || appointments.length === 0) {
-      return res.status(404).json({ message: "Appointments not found" });
-    }
-
-    res.status(200).json(appointments);
-  } catch (error) {
-    console.error("Error fetching appointments:", error.message);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-const getBookingRequestsByProfessional = async (req, res) => {
-  try {
-    if (!req.user || !req.user._id) {
-      return res
-        .status(401)
-        .json({ message: "User not authenticated", success: false });
-    }
-    const professional = req.user;
-    console.log("Professional ID:", professional); // Log professional ID
-
-    // Get booking requests for the professional
-    const bookingRequests = await Booking.find({ professional });
-
-    // Retrieve client details and format date for each booking request
-    const bookingRequestsDetails = await Promise.all(
-      bookingRequests.map(async (request) => {
-        // Assuming client ID is stored in the booking request
-        const client = await User.findById(request.client).select(
-          "username email"
-        );
-        const appointmentDetails = await Appointment.findById(
-          request.appointment
-        ).select("date location");
-
-        // Format date to "YYYY-MM-DD"
-        const formattedDate =
-          appointmentDetails && appointmentDetails.date
-            ? appointmentDetails.date.toISOString().slice(0, 10)
-            : null;
-
-        const location =
-          appointmentDetails && appointmentDetails.location
-            ? appointmentDetails.location
-            : null;
-
-        return {
-          bookingRequest: request,
-          appointmentDetails: {
-            date: formattedDate,
-            location: location,
-          },
-          clientDetails: client,
-        };
-      })
-    );
-
-    console.log("Booking Requests:", bookingRequestsDetails); // Log formatted booking requests
-
-    res.json({
-      bookingRequests: bookingRequestsDetails,
-    });
-  } catch (error) {
-    console.error("Error:", error); // Log any errors
-    res.status(500).json({ message: error.message });
-  }
-};
-
-const getAppointmentsOfClient = async (req, res) => {
-  try {
-    if (!req.user || !req.user._id) {
-      return res.status(401).json({ error: "User not authenticated" });
-    }
-    const client = req.user;
-    console.log("Client ID:", client); // Log client ID
-
-    // Get appointments for the client
-    const appointments = await Booking.find({ client });
-
-    // Retrieve professional and format date for each appointment
-    const appointmentsDetails = await Promise.all(
-      appointments.map(async (request) => {
-        // Assuming professional ID is stored in the booking request
-        const professional = await User.findById(request.professional).select(
-          "username email contactNumber"
-        );
-        const appointmentDetails = await Appointment.findById(
-          request.appointment
-        ).select("date location");
-
-        // Check if appointmentDetails is null
-        if (!appointmentDetails) {
-          return null; // Return null if appointment details are not found
-        }
-
-        // Format date to "YYYY-MM-DD"
-        const formattedDate = appointmentDetails.date
-          ? appointmentDetails.date.toISOString().slice(0, 10)
-          : null;
-
-        return {
-          appointment: request,
-          appointmentDetails: {
-            date: formattedDate,
-            location: appointmentDetails.location,
-          },
-          professionalDetails: professional,
-        };
-      })
-    );
-
-    // Filter out null values
-    const validAppointments = appointmentsDetails.filter(
-      (appointment) => appointment !== null
-    );
-
-    console.log("Appointments:", validAppointments); // Log formatted appointments
-
-    res.json({
-      appointments: validAppointments,
-    });
-  } catch (error) {
-    console.error("Error:", error); // Log any errors
-    res.status(500).json({ message: error.message });
-  }
-};
-
-const updateAppointmentStatus = async (req, res) => {
-  try {
-    const { id, action } = req.params;
-    console.log("pid", id, action);
-
-    // Check if the action is either 'confirm' or 'cancel'
-    if (!["confirm", "cancel"].includes(action)) {
-      return res.status(400).json({ message: "Invalid action" });
-    }
-
-    let updatedAppointment;
-
-    if (action === "confirm") {
-      // Update appointment status to 'confirmed'
-      updatedAppointment = await Booking.findByIdAndUpdate(
-        id,
-        { status: "confirmed", message: "Appointment Confirmed successfully" },
-        { new: true }
-      );
-    } else if (action === "cancel") {
-      // Update appointment status to 'cancelled' instead of removing it
-      updatedAppointment = await Booking.findByIdAndUpdate(
-        id,
-        { status: "cancelled", message: "Appointment Cancelled successfully" },
-        { new: true }
-      );
-    }
-
-    if (!updatedAppointment) {
-      return res.status(404).json({ message: "Appointment not found" });
-    }
-
-    console.log("Updated appointment:", updatedAppointment);
-    res.status(200).json(updatedAppointment);
-  } catch (error) {
-    console.error("Error updating appointment status:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-const deleteCancelledAppointment = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const appointment = await Booking.findById(id);
-
-    if (!appointment) {
-      return res.status(404).json({ message: "Appointment not found" });
-    }
-
-    // If the appointment is found, proceed to delete
-    await Booking.findByIdAndDelete(id);
-    res.status(200).json({ message: "Appointment deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting appointment:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-// Controller to update an existing appointment
-const updateAppointment = async (req, res) => {
-  const { appointmentId } = req.params;
+export const createSlot = asyncHandler(async (req, res) => {
+  requireFields(req.body, ["date", "startTime", "endTime", "location"]);
+  validateSlot(req.body);
+  if (new Date(req.body.date) < startOfToday()) throw new HttpError(400, "Date can't be in the past");
   const { date, startTime, endTime, location } = req.body;
+  const slot = await Appointment.create({ professional: req.user._id, date, startTime, endTime, location });
+  res.status(201).json({ message: "Availability added", slot });
+});
 
-  console.log("appointmentid", appointmentId);
-  console.log(req.body, "reques body");
-  try {
-    // Find the appointment by appointmentId and update its information
-    const updatedAppointment = await Appointment.findOneAndUpdate(
-      { _id: appointmentId }, // Search by appointmentId
-      { date, startTime, endTime, location },
-      { new: true }
-    );
-
-    if (!updatedAppointment) {
-      return res.status(404).json({ message: "Appointment not found" });
-    }
-
-    res.status(200).json(updatedAppointment);
-  } catch (error) {
-    console.error("Error updating appointment:", error);
-    res.status(500).json({ message: "Internal server error" });
+const loadOwnSlot = async (req) => {
+  assertObjectId(req.params.id, "Slot");
+  const slot = await Appointment.findById(req.params.id);
+  if (!slot) throw new HttpError(404, "Slot not found");
+  if (slot.professional.toString() !== req.user._id.toString()) {
+    throw new HttpError(403, "You can only manage your own availability");
   }
+  return slot;
 };
 
-// Controller to delete an appointment
-const deleteAppointment = async (req, res) => {
-  try {
-    const appointment = await Appointment.findByIdAndDelete(req.params.id);
-    if (!appointment) {
-      return res.status(404).json({ message: "Appointment not found" });
-    }
-    res.status(200).json({ message: "Appointment deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+export const updateSlot = asyncHandler(async (req, res) => {
+  const slot = await loadOwnSlot(req);
+  ["date", "startTime", "endTime", "location"].forEach((f) => {
+    if (req.body[f] !== undefined) slot[f] = req.body[f];
+  });
+  validateSlot(slot);
+  await slot.save();
+  res.json({ message: "Availability updated", slot });
+});
+
+export const deleteSlot = asyncHandler(async (req, res) => {
+  const slot = await loadOwnSlot(req);
+  await Booking.updateMany(
+    { appointment: slot._id, status: { $in: ACTIVE } },
+    { status: "cancelled" }
+  );
+  await slot.deleteOne();
+  res.json({ message: "Availability removed; any active bookings were cancelled" });
+});
+
+// ---------- Bookings ----------
+
+export const createBooking = asyncHandler(async (req, res) => {
+  requireFields(req.body, ["slotId", "time"]);
+  const { slotId, time, remark } = req.body;
+  assertObjectId(slotId, "Slot");
+  if (!isTime(time)) throw new HttpError(400, "Pick a valid time");
+
+  const slot = await Appointment.findById(slotId);
+  if (!slot) throw new HttpError(404, "That availability no longer exists");
+  if (slot.professional.toString() === req.user._id.toString()) {
+    throw new HttpError(400, "You can't book your own availability");
   }
-};
 
-const bookAppointment = async (req, res) => {
-  try {
-    const { appointment, professional, client, appointmentTime, remark } =
-      req.body;
-
-    // Check if the client has already booked this appointment
-    const existingBooking = await Booking.findOne({ appointment, client });
-    if (existingBooking) {
-      return res
-        .status(400)
-        .json({ message: "You have already booked this appointment" });
-    }
-
-    // Fetch startTime, endTime, and date from the Appointment model
-    const appointmentDetails = await Appointment.findById(appointment);
-    if (!appointmentDetails) {
-      return res.status(404).json({ message: "Appointment not found" });
-    }
-
-    const { startTime, endTime, date } = appointmentDetails;
-
-    // Parse appointmentTime, startTime, and endTime to Date objects
-    const appointmentDateTime = new Date(date); // Set the date part
-    const [appointmentHour, appointmentMinute] = appointmentTime.split(":");
-    appointmentDateTime.setHours(appointmentHour, appointmentMinute, 0, 0);
-
-    const startDateTime = new Date(date); // Set the date part
-    const [startHour, startMinute] = startTime.split(":");
-    startDateTime.setHours(startHour, startMinute, 0, 0);
-
-    const endDateTime = new Date(date); // Set the date part
-    const [endHour, endMinute] = endTime.split(":");
-    endDateTime.setHours(endHour, endMinute, 0, 0);
-
-    console.log("Appointment Date:", appointmentDateTime);
-    console.log("Start Time:", startDateTime);
-    console.log("End Time:", endDateTime);
-
-    // Check if appointmentTime falls within startTime and endTime
-    if (
-      appointmentDateTime >= startDateTime &&
-      appointmentDateTime <= endDateTime
-    ) {
-      // Create new booking
-      const newBooking = new Booking({
-        appointment,
-        professional,
-        client,
-        appointmentTime,
-        remark,
-      });
-      const savedBooking = await newBooking.save();
-      return res.status(201).json(savedBooking);
-    } else {
-      // Appointment time slot not available
-      return res
-        .status(400)
-        .json({ message: "Appointment slot not available" });
-    }
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
+  const slotDay = new Date(slot.date);
+  slotDay.setHours(0, 0, 0, 0);
+  if (slotDay < startOfToday()) throw new HttpError(400, "This date has passed");
+  // A booking may start no later than 30 minutes before the window closes.
+  if (toMinutes(time) < toMinutes(slot.startTime) || toMinutes(time) > toMinutes(slot.endTime) - 30) {
+    throw new HttpError(400, `Choose a time between ${slot.startTime} and 30 minutes before ${slot.endTime}`);
   }
-};
 
-// Controller to retrieve appointments booked by a client
-const getClientAppointments = async (req, res) => {
-  try {
-    console.log("user", req.user);
-    if (!req.user || !req.user._id) {
-      return res.status(401).json({ message: "User not authenticated" });
-    }
-
-    const clientId = req.user._id; // Assuming the authenticated user is the client
-    console.log("Client ID:", clientId);
-
-    const appointments = await Booking.find({ client: clientId });
-    res.status(200).json(appointments);
-    console.log("Appointments:", appointments);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  if (await Booking.exists({ appointment: slotId, client: req.user._id, status: { $in: ACTIVE } })) {
+    throw new HttpError(409, "You already have a booking in this slot");
   }
-};
-
-//get confirmed appointments
-const getConfirmedBookings = async (req, res) => {
-  try {
-    console.log("user", req.user);
-
-    if (!req.user || !req.user._id) {
-      return res.status(401).json({ error: "User not authenticated" });
-    }
-    console.log("req user role", req.user.role);
-
-    let confirmedBookings;
-
-    if (req.user.role === "professional") {
-      // Query the database for confirmed bookings associated with the professional's ID
-      confirmedBookings = await Booking.find({
-        professional: req.user._id,
-        status: "confirmed",
-      });
-    } else if (req.user.role === "client") {
-      // Query the database for confirmed bookings associated with the client's ID
-      confirmedBookings = await Booking.find({
-        client: req.user._id,
-        status: "confirmed",
-      });
-    } else {
-      return res.status(403).json({ error: "Invalid user role" });
-    }
-
-    // Send the confirmed bookings as a response
-    res.status(200).json(confirmedBookings);
-  } catch (error) {
-    // Handle errors
-    res.status(500).json({ error: error.message });
+  if (await Booking.exists({ appointment: slotId, appointmentTime: time, status: { $in: ACTIVE } })) {
+    throw new HttpError(409, "That time was just taken. Please pick another.");
   }
+
+  const booking = await Booking.create({
+    appointment: slot._id,
+    professional: slot.professional,
+    client: req.user._id,
+    appointmentTime: time,
+    remark,
+  });
+  res.status(201).json({ message: "Booking requested. You'll be notified when it's confirmed.", booking });
+});
+
+// Bookings for the signed-in user, from whichever side they're on.
+export const listMyBookings = asyncHandler(async (req, res) => {
+  const filter =
+    req.user.role === "professional" ? { professional: req.user._id } : { client: req.user._id };
+  if (req.query.status) filter.status = req.query.status;
+
+  const bookings = await Booking.find(filter)
+    .populate("appointment", "date startTime endTime location")
+    .populate("client", "username email contactNumber profile")
+    .populate("professional", "username email contactNumber profile")
+    .sort({ createdAt: -1 })
+    .lean();
+  res.json(bookings.filter((b) => b.appointment));
+});
+
+const TRANSITIONS = {
+  professional: { pending: ["confirmed", "cancelled"], confirmed: ["completed", "cancelled"] },
+  client: { pending: ["cancelled"], confirmed: ["cancelled"] },
 };
 
-export {
-  createAppointment,
-  getAppointmentById,
-  getAppointmentsByProfessional,
-  getAppointmentsOfClient,
-  getBookingRequestsByProfessional,
-  updateAppointmentStatus,
-  deleteCancelledAppointment,
-  updateAppointment,
-  deleteAppointment,
-  bookAppointment,
-  getClientAppointments,
-  getConfirmedBookings,
-};
+export const updateBookingStatus = asyncHandler(async (req, res) => {
+  assertObjectId(req.params.id, "Booking");
+  const { status } = req.body;
+  const booking = await Booking.findById(req.params.id);
+  if (!booking) throw new HttpError(404, "Booking not found");
+
+  const me = req.user._id.toString();
+  const side =
+    booking.professional.toString() === me ? "professional" : booking.client.toString() === me ? "client" : null;
+  if (!side) throw new HttpError(403, "This isn't your booking");
+
+  const allowed = TRANSITIONS[side][booking.status] || [];
+  if (!allowed.includes(status)) {
+    throw new HttpError(400, `Can't change a ${booking.status} booking to ${status}`);
+  }
+  booking.status = status;
+  await booking.save();
+  res.json({ message: `Booking ${status}`, booking });
+});
+
+export const deleteBooking = asyncHandler(async (req, res) => {
+  assertObjectId(req.params.id, "Booking");
+  const booking = await Booking.findById(req.params.id);
+  if (!booking) throw new HttpError(404, "Booking not found");
+  const me = req.user._id.toString();
+  if (![booking.professional.toString(), booking.client.toString()].includes(me)) {
+    throw new HttpError(403, "This isn't your booking");
+  }
+  if (ACTIVE.includes(booking.status)) {
+    throw new HttpError(400, "Cancel the booking before removing it");
+  }
+  await booking.deleteOne();
+  res.json({ message: "Booking removed" });
+});
